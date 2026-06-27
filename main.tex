@@ -41,10 +41,10 @@
 }
 \maketitle
 \begin{abstract}
-Timed automata are widely used to model and verify real-time industrial systems, but practical industrial models often combine multiple components, clocks, synchronizations, guards, invariants, and timing properties. When several properties fail, engineers must identify clock-bound constants that can be repaired without breaking other requirements or changing intended untimed behavior. This paper presents MPTA-Repair, a counterexample-guided workflow for multi-property clock-bound repair of industrial timed automata. MPTA-Repair modifies numerical clock bounds in guards and invariants, uses MaxSMT-based repair generation to synthesize small candidate edits, validates each candidate through full-property regression verification, and applies a TARTAR-style admissibility check for functional equivalence. The workflow jointly considers relations among violated properties, diagnostic traces, and repair variables during iterative refinement.
+Timed automata are widely used to model and verify real-time systems with strict timing requirements. Industrial models are often checked against multiple predefined properties, including timed safety properties. When these properties are violated, the faults may stem from erroneous clock bounds in guards or invariants; however, repairing such bounds is challenging because a local change may affect other properties or alter intended untimed behavior. This paper presents MPTA-Repair, a counterexample-guided iterative approach for multi-property clock-bound repair of timed automata. It extracts repairable bounds from guards and invariants, analyzes diagnostic counterexamples, and uses MaxSMT-based repair generation to synthesize small candidate edits. Each candidate is validated against the full property set and checked for admissibility to ensure functional equivalence. Experiments on UPPAAL and XtaBenchmarkSuite benchmarks show a 93\% repair success rate, while an industrial case-study dataset achieves 76\%.
 \end{abstract}
 \begin{IEEEkeywords}
-Timed automata, multi-property repair, clock-bound repair, industrial systems
+Timed automata, multi-property repair, clock-bound repair, counterexample-guided repair
 \end{IEEEkeywords}
 \input{sections/introduction}
 \input{sections/background}
