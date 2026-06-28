@@ -35,16 +35,16 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
-\title{MPTA-Repair: Multi-Property Clock-Bound Repair for Industrial Timed Automata}
+\title{MPTA-Repair: Clock-Bound Repair for Multi-Property Timed Automata in Industrial Practice}
 \author{%
 % TODO: Add the non-anonymous author names, affiliations, city/country, and email/ORCID. The Markdown-converted draft had an empty \author{} block.
 }
 \maketitle
 \begin{abstract}
-Timed automata are widely used to model and verify real-time systems with strict timing requirements. Industrial models are often checked against multiple predefined properties, including timed safety properties. When these properties are violated, the faults may stem from erroneous clock bounds in guards or invariants; however, repairing such bounds is challenging because a local change may affect other properties or alter intended untimed behavior. This paper presents MPTA-Repair, a counterexample-guided iterative approach for multi-property clock-bound repair of timed automata. It extracts repairable bounds from guards and invariants, analyzes diagnostic counterexamples, and uses MaxSMT-based repair generation to synthesize small candidate edits. Each candidate is validated against the full property set and checked for admissibility to ensure functional equivalence. Experiments on UPPAAL and XtaBenchmarkSuite benchmarks show a 93\% repair success rate, while an industrial case-study dataset achieves 76\%.
+Timed automata (TAs) are widely used to model and verify real-time industrial systems, which are typically required to satisfy multiple predefined properties simultaneously. When verification, e.g., in UPPAAL, fails, repairing the model is challenging because it requires isolating and modifying erroneous clock constraints to satisfy all properties while preserving functional equivalence. To address this, we present MPTA-Repair, an automated repair framework for multi-property TAs. The framework employs an iterative, counterexample-guided MaxSMT approach to generate candidate models with minimal modifications. To optimize search efficiency, it systematically exploits relationships among properties, diagnostic counterexamples, and repair variables. Each candidate model is then validated through full-property regression verification and acceptability checks. Compared to an iterative TARTAR baseline, MPTA-Repair achieves higher effectiveness. On faulty models generated via our proposed mutation strategy, it successfully repairs 93\% of the cases derived from UPPAAL and the XtaBenchmarkSuite, and 76\% in an industrial dataset constructed in this work.
 \end{abstract}
 \begin{IEEEkeywords}
-Timed automata, multi-property repair, clock-bound repair, counterexample-guided repair
+Timed automata, automated model repair, MaxSMT, multi-property verification
 \end{IEEEkeywords}
 \input{sections/introduction}
 \input{sections/background}
