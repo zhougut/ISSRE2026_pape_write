@@ -50,15 +50,17 @@ when the same clock, transition, location, or synchronization appears in both ex
 all editable  bounds are treated as equally plausible repair targets, the solver may also 
 explore weakly related candidates with limited relevance to the observed violations.
 
-This paper presents MPTA-Repair, an automatic workflow for multi-property, multi-counterexample clock-bound repair
-of industrial timed-automata models. Given a faulty model, timing properties, and diagnostic traces,
-MPTA-Repair suggests small modifications to numerical clock bounds in transition guards and location
-invariants. Its repair space is limited to clock-bound constants, excluding arbitrary structural edits,
-specification changes, synchronization changes, and reset changes. Lightweight relation analysis among properties,
-traces, and editable bounds guides search only as an optimization. Every accepted candidate must
-satisfy the complete property set through regression verification and pass a TARTAR-style admissibility
-check based on functional equivalence. Thus, MPTA-Repair targets system-level timing corrections, not
-local counterexample patches.
+This paper presents \textbf{MPTA-Repair}, an automatic workflow for multi-property, 
+multi-counterexample clock-bound repair of timed-automata models. Given a faulty 
+model, a set of timing properties, and diagnostic traces, MPTA-Repair proposes small changes to 
+numerical clock bounds in transition guards and location invariants. The repair space is 
+deliberately confined to clock-bound constants; it does not include arbitrary structural edits, 
+specification changes, synchronization changes, or reset changes. Lightweight relation analysis 
+over properties, traces, and editable bounds is used only to guide the search. Every accepted 
+candidate must satisfy the complete property set through regression verification and pass a 
+TARTAR-style admissibility check based on functional equivalence. The resulting repair is 
+therefore expected to restore the stated timing requirements while preserving the functional 
+behavior of the model, rather than merely blocking one reported counterexample.
 
 We evaluate MPTA-Repair on two dataset groups: a benchmark dataset from UPPAAL and
 XTA sources, and an industry dataset covering railway alarm and communication scenarios
