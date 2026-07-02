@@ -7,6 +7,25 @@ Industrial timed-automata models are rarely validated against a single property.
 
 The difficulty becomes more pronounced in the multi-property setting. A timing fault may affect several properties, and different violated properties may produce related counterexamples. A repair that blocks one reported trace may leave another violating trace feasible, or may break a property that was previously satisfied. Similarly, changing a bound for one property can affect another property when the same clock, location, transition, synchronization, or execution fragment is involved. Thus, a practical repair method for industrial timed automata must not accept a candidate merely because it fixes one local counterexample. It must validate the candidate against the complete property set and ensure that the functional behavior of the model is preserved.
 
+Figure~\ref{fig:gear-shift-nta} illustrates this issue with a simplified network timed automaton for an automotive gear-shift controller \cite{lindahl1998gear}. A Driver template periodically issues a shift request, and a GearController template performs torque cut, gear engagement, acknowledgement, and recovery. The model uses $cut \leq 1$ in the Cut location, $cut \geq 1$ on the transition to Engage, $mesh \leq 3$ in the Engage location, and $mesh \geq 3$ on the acknowledgement transition. One property requires at least two time units of torque cut before gear engagement, while another property requires the shift request to be acknowledged within four time units. A single-property repair for the first property may change only the cut bounds from 1 to 2 and thereby block the early-engagement trace. However, with the mesh bounds unchanged at 3, the earliest acknowledgement would occur at time 5, so the response-deadline property fails. A multi-property repair instead changes both the cut bounds and the mesh bounds, for example to $cut \leq 2$, $cut \geq 2$, $mesh \leq 2$, and $mesh \geq 2$. The repaired controller then satisfies both the minimum torque-cut requirement and the response deadline while preserving the same untimed request-acknowledgement behavior. This example motivates treating properties, counterexamples, and repair variables as joint repair evidence rather than independent local repair tasks.
+
+\begin{figure*}[t]
+  \centering
+  \begin{minipage}{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/gear_shift_nta_Driver.png}\\[-0.2em]
+    \footnotesize (a) Driver template
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.58\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/gear_shift_nta_GearController.png}\\[-0.2em]
+    \footnotesize (b) GearController template
+  \end{minipage}
+  \caption{A simplified network timed automaton for a cyclic automotive gear-shift controller. The faulty model uses $cut \leq 1$, $cut \geq 1$, $mesh \leq 3$, and $mesh \geq 3$. A repair that changes only the cut bounds blocks the early-engagement trace but can violate the response-deadline property; a multi-property repair also changes the mesh bounds.}
+  \label{fig:gear-shift-nta}
+\end{figure*}
+
 Existing repair techniques provide an important foundation for this problem. Clock-bound repair encodes a TDT as linear real arithmetic, introduces variation variables for clock bounds, and uses MaxSMT solving to compute small modifications to guards and invariants \cite{koelbl2019clock}. TARTAR builds on this idea by suggesting syntactic repairs and checking whether the repaired model preserves the untimed functional behavior of the original network timed automaton \cite{koelbl2020tartar}. Related work also includes parameter synthesis for parametric timed automata \cite{alur1993parametric}, clock-guard repair through abstraction and testing \cite{andre2019repairing}, robustness analysis for uncertain timing constants \cite{bendik2021robustness}, and SAT/SMT-based model or program repair \cite{jose2011bugassist}. These methods show that automated repair of timed models is feasible, but most TDT-based workflows still reason from one violated property or one diagnostic trace at a time.
 
 This paper presents \textbf{MPTA-Repair}, an automated repair framework for multi-property TAs. Given a faulty timed-automata model, a set of timing properties, and diagnostic traces produced by verification, MPTA-Repair searches for small changes to numerical clock bounds in transition guards and location invariants. It does not change property formulas, locations, transitions, synchronization labels, clock references, or resets. This restriction matches the clock-bound repair formulation and the mutation-based evaluation used in this paper, while broader modeling faults such as reset errors, synchronization errors, data-update errors, or structural errors are outside the current scope.
