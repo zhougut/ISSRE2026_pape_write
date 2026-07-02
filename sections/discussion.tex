@@ -1,34 +1,5 @@
-﻿\section{Discussion and Threats to Validity}
-\label{sec:discussion}
-
-\subsection{Lessons Learned}
-
-\textbf{Lesson 1: Full-property regression is necessary.} In industrial
-models, properties are not independent. A local fix can easily break a
-related requirement, so every candidate repair must be checked against
-the complete property set.
-
-\textbf{Lesson 2: Admissibility changes the meaning of repair success.}
-Without behavior preservation, some repairs appear successful because
-they remove problematic behavior. For industrial systems, such repairs are
-not acceptable.
-
-\textbf{Lesson 3: One counterexample is often insufficient.} A single
-TDT gives useful failure evidence, but it may expose only one timing
-realization. Accumulating traces helps avoid repairs that overfit the
-first observed violation.
-
-\textbf{Lesson 4: Relation analysis should be conservative.} Property
-and trace relations are useful for search guidance, but uncertain
-relations should not be used to discard obligations. Final acceptance
-must remain based on verification and admissibility.
-
-\textbf{Lesson 5: Repair reports matter.} For engineering use, a repair
-tool should explain not only the final edit, but also the violated
-properties, traces considered, candidate failures, regression results,
-and admissibility outcome.
-
-\subsection{Threats to Validity}
+\section{Threats to Validity}
+\label{sec:threats}
 
 \textbf{Internal validity.} The prototype includes parsers for
 timed-automata models, property files, diagnostic traces, repair sites,
@@ -49,8 +20,8 @@ timed-automata repair.
 \textbf{External validity.} Although the industry dataset covers several
 practical domains, it is still a finite set of open or reconstructed
 models. It may not represent all industrial timed-automata models.
-Larger proprietary models, richer data variables, and more
-complex property specifications may introduce additional challenges.
+Larger proprietary models, richer data variables, and more complex
+property specifications may introduce additional challenges.
 
 \textbf{Baseline fairness.} The baseline is an iterative TARTAR-style
 repair workflow adapted to the multi-property setting by adding
@@ -60,15 +31,16 @@ original setting for which TARTAR was designed. We therefore interpret
 the comparison as a comparison against a strong single-property repair
 strategy, not as a claim that TARTAR itself is unsuitable in general.
 
-\textbf{Property selection.} Industry-case properties were selected
-from model descriptions, papers, embedded queries, and intended timing
+\textbf{Property selection.} Industry-case properties were selected from
+model descriptions, papers, embedded queries, and intended timing
 requirements. Some properties may be incomplete or may not capture all
 domain-level requirements. We mitigate this by requiring all reference
 models to satisfy the selected property set and by filtering out trivial
 guard-mirror properties when constructing the benchmark.
 
 \textbf{Repair-space limitation.} The current method focuses on
-numerical clock-bound edits in guards and invariants \cite{koelbl2019clock}. Some
-failed cases likely require repair actions outside this space. Extending
-the method to reset repair, synchronization repair, clock-reference
-repair, and structural repair is left for future work.
+numerical clock-bound edits in guards and invariants
+\cite{koelbl2019clock}. Some failed cases likely require repair actions
+outside this space. Extending the method to reset repair,
+synchronization repair, clock-reference repair, and structural repair is
+left for future work.
