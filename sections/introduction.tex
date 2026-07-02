@@ -1,91 +1,26 @@
 ﻿\section{Introduction}
 \label{sec:introduction}
 
-Real-time and industrial software increasingly runs where timing faults can compromise safety,
-availability, or mission success. Timed automata have modeled railway train-gate controllers,
-communication protocols, and safety layers \cite{basile2021unisig}; automotive gear-control logic,
-road-junction behavior, and time-bounded decisions \cite{lindahl1998gear}; medical pacemakers and
-ventilator controllers with safety-critical timing windows and actuation deadlines \cite{jiang2012pacemaker};
-and aerospace or avionics schedulability and deadline analysis \cite{david2010herschel}.
-In these domains, correctness depends on event order and timing: an alarm,
-pulse, message, or resource release may still be wrong if it occurs too
-early, too late, or for an incorrect duration.
+Timed automata (TAs) are widely used to model and verify real-time industrial systems whose correctness depends on both discrete behavior and quantitative timing constraints \cite{alur1994theory,bengtsson2004timed}. Such systems commonly appear in railway control and communication protocols \cite{basile2021unisig}, automotive and autonomous-driving logic \cite{lindahl1998gear,belguidoum2021junction}, medical cyber-physical systems \cite{jiang2012pacemaker,cuartas2023ventilator}, and aerospace or avionics scheduling \cite{david2010herschel}. In these domains, an alarm, pulse, message, or resource release may be functionally present but still incorrect if it occurs too early, too late, or for an incorrect duration. Verification therefore has to check not only reachability or event order, but also whether timing requirements are satisfied under all relevant executions.
 
-Timed automata model such systems \cite{alur1994theory}. Networks of timed automata use clocks,
-guards, invariants, synchronizations, and resets to encode discrete behavior and quantitative timing
-constraints \cite{bengtsson2004timed}. Verification checks safety, bounded response, deadline satisfaction,
-error-state reachability, alarm duration, and deadlock freedom. When a property is violated,
-UPPAAL, Kronos, or opaal can produce a timed diagnostic trace (TDT),
-a timed counterexample showing a path to a violating state \cite{daws1996kronos}.
+Industrial timed-automata models are rarely validated against a single property. They are typically checked against a set of predefined properties that jointly express safety, bounded response, deadline satisfaction, error-state reachability, alarm duration, and deadlock freedom \cite{vogel2022patterns}. When a property is violated, model checkers such as UPPAAL, Kronos, or opaal can produce a timed diagnostic trace (TDT), namely a timed counterexample showing how the model reaches a violating state \cite{daws1996kronos}. A TDT is useful evidence for repair, but it is not a repair instruction. It does not identify which clock constraint is erroneous, whether the error lies in a transition guard or a location invariant, or how a numerical bound should be changed to restore the intended timing behavior \cite{koelbl2019clock}.
 
-Diagnosis alone is insufficient. Industrial models contain many locations, transitions, clocks, guards,
-invariants, synchronizations, and resets, so interpreting a TDT as a correct edit
-remains difficult. A TDT exposes one feasible violating execution, but not the faulty
-clock constraint, whether the defect is in a guard or invariant, or how
-a bound should change \cite{koelbl2019clock}. Under multiple properties, ambiguity grows because
-industrial specifications combine safety, response, scheduling, and reliability obligations \cite{vogel2022patterns}.
-A local edit may remove one trace while leaving related traces feasible or
-breaking another property, so each candidate must be validated against the complete property set.
+The difficulty becomes more pronounced in the multi-property setting. A timing fault may affect several properties, and different violated properties may produce related counterexamples. A repair that blocks one reported trace may leave another violating trace feasible, or may break a property that was previously satisfied. Similarly, changing a bound for one property can affect another property when the same clock, location, transition, synchronization, or execution fragment is involved. Thus, a practical repair method for industrial timed automata must not accept a candidate merely because it fixes one local counterexample. It must validate the candidate against the complete property set and ensure that the functional behavior of the model is preserved.
 
-Existing timed-automata repair techniques provide an important 
-foundation. Clock-bound repair encodes a TDT as linear real arithmetic, 
-introduces variation variables for clock bounds, and uses MaxSMT solving 
-to compute small modifications to guards and invariants \cite
-{koelbl2019clock}. TarTar builds on this idea by suggesting syntactic 
-repairs and checking whether the repaired model preserves the untimed 
-functional behavior of the original network timed automaton \cite
-{koelbl2020tartar}. Related work includes parameter synthesis for parametric timed automata
-\cite{alur1993parametric}, clock-guard repair through abstraction and testing \cite{andre2019repairing},
-robustness analysis for uncertain timing constants \cite{bendik2021robustness}, and SAT/SMT-based model
-or program repair \cite{jose2011bugassist}. These methods show feasibility, but most TDT-based workflows
-still repair one violated property or diagnostic trace at a time.
+Existing repair techniques provide an important foundation for this problem. Clock-bound repair encodes a TDT as linear real arithmetic, introduces variation variables for clock bounds, and uses MaxSMT solving to compute small modifications to guards and invariants \cite{koelbl2019clock}. TARTAR builds on this idea by suggesting syntactic repairs and checking whether the repaired model preserves the untimed functional behavior of the original network timed automaton \cite{koelbl2020tartar}. Related work also includes parameter synthesis for parametric timed automata \cite{alur1993parametric}, clock-guard repair through abstraction and testing \cite{andre2019repairing}, robustness analysis for uncertain timing constants \cite{bendik2021robustness}, and SAT/SMT-based model or program repair \cite{jose2011bugassist}. These methods show that automated repair of timed models is feasible, but most TDT-based workflows still reason from one violated property or one diagnostic trace at a time.
 
-This paper addresses multi-property interaction. A baseline repair loop can process one violated 
-property, collect one TDT, compute a local repair, instantiate a 
-candidate model, and run regression verification. However, this loop may become inefficient or 
-unstable when a single timing fault affects  several properties or related traces. Similar 
-traces may encode overlapping faulty behavior. A candidate that removes one trace may leave 
-other violations feasible, and a bound change made for one property may affect another property 
-when the same clock, transition, location, or synchronization appears in both executions. If 
-all editable  bounds are treated as equally plausible repair targets, the solver may also 
-explore weakly related candidates with limited relevance to the observed violations.
+This paper presents \textbf{MPTA-Repair}, an automated repair framework for multi-property TAs. Given a faulty timed-automata model, a set of timing properties, and diagnostic traces produced by verification, MPTA-Repair searches for small changes to numerical clock bounds in transition guards and location invariants. It does not change property formulas, locations, transitions, synchronization labels, clock references, or resets. This restriction matches the clock-bound repair formulation and the mutation-based evaluation used in this paper, while broader modeling faults such as reset errors, synchronization errors, data-update errors, or structural errors are outside the current scope.
 
-This paper presents \textbf{MPTA-Repair}, an automatic workflow for multi-property, 
-multi-counterexample clock-bound repair of timed-automata models. Given a faulty 
-model, a set of timing properties, and diagnostic traces, MPTA-Repair proposes small changes to 
-numerical clock bounds in transition guards and location invariants. The repair space is 
-deliberately confined to clock-bound constants; it does not include arbitrary structural edits, 
-specification changes, synchronization changes, or reset changes. Lightweight relation analysis 
-over properties, traces, and editable bounds is used only to guide the search. Every accepted 
-candidate must satisfy the complete property set through regression verification and pass a 
-TARTAR-style admissibility check based on functional equivalence. The resulting repair is 
-therefore expected to restore the stated timing requirements while preserving the functional 
-behavior of the model, rather than merely blocking one reported counterexample.
+MPTA-Repair employs an iterative, counterexample-guided MaxSMT approach to generate minimally modified candidate models. Instead of treating violated properties and diagnostic traces as independent subproblems, it maintains a pool of property-trace repair obligations and searches for a clock-bound assignment that satisfies the currently encoded obligations. To improve search efficiency, the framework systematically exploits relationships among properties, counterexamples, and repair variables to organize the search. These relations group related evidence, rank or restrict active repair variables, and avoid solving over unrelated bounds when the current counterexample evidence gives no reason to include them. These relations guide candidate generation, whereas accepted candidates must still satisfy all properties in regression verification and pass a TARTAR-style acceptability check based on functional equivalence.
 
-We evaluate MPTA-Repair on two dataset groups: a benchmark dataset from UPPAAL and
-XTA sources, and an industry dataset covering railway alarm and communication scenarios
-\cite{gonzalez2024realtimedevs,basile2021unisig}, train-gate behavior \cite{behrmann2004tutorial},
-automotive gear control \cite{lindahl1998gear}, cardiac pacing \cite{jiang2012pacemaker},
-autonomous road-junction rules \cite{belguidoum2021junction}, mechanical ventilation \cite{cuartas2023ventilator},
-and aerospace scheduling \cite{david2010herschel}. We measure repair effectiveness, repair size,
-runtime, regression results, and behavior preservation, compare with an iterative TARTAR-style baseline
-under identical full-property regression and admissibility requirements, and report practical observations.
+We evaluate MPTA-Repair on faulty models generated via a mutation strategy designed for clock-bound repair. The benchmark dataset is derived from UPPAAL and the XtaBenchmarkSuite, while the industrial dataset is constructed in this work from practical case studies covering railway alarm and communication scenarios \cite{gonzalez2024realtimedevs,basile2021unisig}, train-gate behavior \cite{behrmann2004tutorial}, automotive gear control \cite{lindahl1998gear}, cardiac pacing \cite{jiang2012pacemaker}, autonomous road-junction rules \cite{belguidoum2021junction}, mechanical ventilation \cite{cuartas2023ventilator}, and aerospace scheduling \cite{david2010herschel}. We measure repair effectiveness, repair size, runtime, regression outcomes, and behavior preservation. Compared with an iterative TARTAR-style baseline under the same repair space, full-property regression requirement, and admissibility requirement, MPTA-Repair improves the repair success rate from 72\% to 93\% on the benchmark dataset and from 20\% to 76\% on the industrial dataset.
 
-The contributions of this paper are as follows. We formulate practical clock-bound repair as a 
-multi-property, multi-counterexample problem; present MPTA-Repair, in which diagnostic traces 
-and lightweight relation analysis guide the repair search; implement a prototype that combines 
-trace analysis, MaxSMT-based repair, full-property regression verification, and TARTAR-style 
-admissibility checking; evaluate the approach on benchmark and industry datasets against an 
-iterative single-property baseline under identical acceptance criteria; and report lessons on 
-property selection, repair interpretability, and the need for full regression after each 
-candidate repair.
+The contributions of this paper are as follows. First, we formulate clock-bound repair for practical timed-automata models as a multi-property, multi-counterexample repair problem in which local trace repair is insufficient unless the repaired model satisfies the complete property set. Second, we present MPTA-Repair, an iterative counterexample-guided MaxSMT framework that uses relationships among properties, counterexamples, and repair variables to guide the repair search. Third, we implement a prototype that combines trace analysis, MaxSMT-based clock-bound repair, full-property regression verification, and TARTAR-style admissibility checking. Fourth, we evaluate the approach on benchmark and industrial datasets against an iterative single-property baseline under identical acceptance criteria. Finally, we report practical lessons on property selection, repair interpretability, counterexample accumulation, and the need for full regression after each candidate repair.
 
 The remainder of this paper is organized as follows. Section II provides
 the background and problem setting, including timed automata, diagnostic
 traces, clock-bound repair, and the multi-property repair objective.
 Section III presents MPTA-Repair and its relation-guided repair
 workflow. Section IV describes the prototype implementation and
-evaluation setup. Section V reports the evaluation results and practical
-lessons learned from the benchmark and industry datasets. Section VI
-discusses threats to validity and related work. Section VII concludes the
-paper.
+experimental evaluation. Section V discusses threats to validity. Section
+VI reviews related work. Section VII concludes the paper.
