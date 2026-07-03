@@ -48,6 +48,20 @@ admissibility criterion \cite{koelbl2019clock}. If validation fails, the rejecte
 assignment is blocked, newly observed diagnostic traces are added, and
 the repair loop continues.
 
+Figure~\ref{fig:mpta-repair-workflow} summarizes the resulting workflow.
+The initial verification stage produces the property-trace pool, the
+relation-guided stage organizes properties, counterexamples, and
+repairable bounds, and the MaxSMT stage generates candidate edits. The
+final validation gates either accept a fully admissible repair or feed
+new diagnostic evidence back into the next refinement round.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.98\textwidth]{mpta_repair_framework.pdf}
+  \caption{Overview of the MPTA-Repair workflow.}
+  \label{fig:mpta-repair-workflow}
+\end{figure*}
+
 \subsection{Bound Variation and Joint Trace Encoding}
 
 MPTA-Repair follows the bound-variation view used in clock-bound repair
