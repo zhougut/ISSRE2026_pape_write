@@ -55,108 +55,127 @@ admissible repair is found or the search budget is exhausted.
 
 \subsection{Evaluation Strategy and Datasets}
 
-We evaluate the proposed framework on two dataset groups. The benchmark
-dataset consists of timed-automata models collected from UPPAAL and XTA
-benchmark sources. These models provide structural diversity and allow
-comparison with existing clock-bound repair settings. The industry
-dataset contains practical case studies involving railway alarm and
-communication scenarios
-\cite{gonzalez2024realtimedevs,basile2021unisig}, train-gate behavior
-\cite{behrmann2004tutorial}, automotive gear control
-\cite{lindahl1998gear}, cardiac pacing \cite{jiang2012pacemaker},
-autonomous road-junction rules \cite{belguidoum2021junction},
-mechanical ventilation \cite{cuartas2023ventilator}, and aerospace
-scheduling \cite{david2010herschel}. Together, the two dataset groups
-test both algorithmic behavior on established examples and practical
-behavior on industrial models with synchronization, multiple
-components, and domain-level timing requirements.
+To evaluate the proposed framework, we use two dataset groups designed
+to exercise different operational dimensions. The benchmark dataset
+contains established timed-automata models from standard UPPAAL and XTA
+sources, including protocol-style models such as CSMA/CD and FDDI.
+These models provide structural diversity and support comparison with
+existing single-trace repair settings. To assess practical
+applicability, the industry dataset contains industrial case studies
+with multi-component networks and domain-level timing requirements,
+including railway communication protocols \cite{basile2021unisig},
+automotive gear control \cite{lindahl1998gear}, and cardiac pacing
+\cite{jiang2012pacemaker}. Unlike many standard benchmarks, these
+industrial models typically include between three and nine coupled
+timing properties. The two dataset groups therefore test both basic
+algorithmic behavior and the more difficult synchronization and
+property-interaction patterns found in practical industrial models.
 
 Because naturally occurring faulty timed-automata models are scarce, we
-use a mutation-based evaluation strategy \cite{jia2011mutation}. Faults
-are seeded into verified reference models by modifying clock-bound
-constants in guards and invariants. For simple mutants, one bound is
-changed and the resulting model is retained if it violates at least one
-selected timing safety property. For complex mutants, multiple
-clock-bound edits are injected to simulate interacting timing faults.
-Generated mutants are filtered to remove invalid or trivial cases: each
-retained mutant must be syntactically valid and must violate at least
-one selected property.
+use a mutation-based evaluation strategy to synthesize faulty instances
+\cite{jia2011mutation}. Consistent with the repair space defined in
+this paper, fault injection strictly modifies numerical clock-bound
+constants in guards and invariants and deliberately excludes arbitrary
+structural logic changes. Simple mutants contain a localized
+single-point modification. Complex mutants are constructed using a
+two-fault effective mutation strategy, where each complex instance
+combines two non-redundant single-point faults. These combinations are
+filtered to remove trivial cases and retain only instances in which both
+faults contribute to the resulting property violation. All retained
+mutants are checked to ensure that they remain syntactically valid,
+violate at least one selected timing safety specification, and pass a
+preliminary admissibility screen so that the original non-timing
+functional behavior is not destroyed before repair begins.
 
 We compare MPTA-Repair with an adapted iterative TARTAR-style baseline
-\cite{koelbl2020tartar}. For fairness, the baseline receives the same
-full-property regression and admissibility validation gates used by
-MPTA-Repair. However, the baseline generates repairs from one violated
-property or diagnostic trace at a time. It does not jointly analyze
-relations among multiple properties, counterexamples, and repair
-variables before candidate generation. This difference allows us to
-measure the benefit of the multi-property and multi-counterexample
-repair strategy.
+\cite{koelbl2020tartar}. To keep the comparison fair, the baseline is
+given the same full-property regression and admissibility validation
+gates used by MPTA-Repair. The key methodological difference is that the
+baseline still derives repairs from one property or diagnostic trace at
+a time. Since it lacks the joint multi-counterexample relation analysis
+used by MPTA-Repair, it is more prone to localized optimization and
+overfitting to isolated fault paths. This comparison highlights the
+benefit of evaluating properties, counterexamples, and repair variables
+as joint repair evidence.
 
 \subsection{Experimental Results}
 
-The experimental results show that MPTA-Repair outperforms the
+The experimental evaluation shows that MPTA-Repair outperforms the
 iterative baseline, particularly on complex industrial models. On the
-benchmark dataset, the baseline repairs 72\% of the cases, while
-MPTA-Repair repairs 93\%. On the industry dataset, the gap is larger:
-the baseline repairs 20\% of the cases, while MPTA-Repair repairs
-76\%. These results suggest that the proposed workflow remains
-effective on established timed-automata benchmarks and is more robust
-when properties and traces interact in industrial models.
+standardized benchmark dataset, the baseline repairs 72\% of the cases,
+whereas MPTA-Repair achieves a 93\% success rate. The performance gap
+becomes larger on the industry dataset: the baseline repairs 20\% of the
+cases, while MPTA-Repair repairs 76\%. These results suggest that the
+proposed workflow remains effective on established timed-automata
+benchmarks and is substantially more robust when properties and traces
+interact in industrial models.
 
 \input{tables/overall-results}
 
 The baseline remains competitive on simpler benchmark models where
-faults are highly localized. In such cases, a single diagnostic trace
-often provides enough evidence to infer a useful clock-bound edit.
-However, in industrial models with interacting concurrent components,
-synchronization mechanisms, and observer templates, local baseline
-repairs frequently fail later global validation checks.
+timing errors are concentrated on isolated guards or invariants. In such
+localized cases, a single diagnostic trace often provides enough
+evidence to infer a useful clock-bound repair. However, even within
+standard benchmarks with shared multi-channel structures, such as FDDI
+protocol models, MPTA-Repair is more robust because it actively prevents
+single-trace overfitting. This advantage is more pronounced in
+industrial models with interacting concurrent components, urgent or
+broadcast synchronization channels, observer templates, and array-based
+modeling constructs. In these settings, local baseline repairs
+frequently fail later global validation checks. We observed two common
+causes: the baseline does not explicitly optimize edit magnitude and can
+therefore generate extreme candidate bounds that fail admissibility, and
+it must satisfy the regression pressure imposed by three to nine coupled
+domain properties without jointly analyzing their counterexamples.
 
-Our analysis identifies two main reasons for the stronger performance
-of MPTA-Repair. First, multi-counterexample accumulation reduces
-overfitting to one timed diagnostic trace. A single trace usually
-exposes only one timing realization of a deeper fault, so a candidate
-that eliminates that trace may still leave related violations feasible.
-By accumulating diagnostic traces from multiple operational modes,
-MPTA-Repair can synthesize small joint edit sets that address the shared
-timing fault without requiring excessive refinement rounds.
+MPTA-Repair succeeds more often because of two architectural advantages.
+First, multi-counterexample accumulation reduces overfitting to one
+timed diagnostic trace. A single trace typically exposes only one timing
+realization of a deeper defect. By accumulating and analyzing diagnostic
+traces from multiple operational modes, MPTA-Repair can synthesize small
+joint edit sets that address the shared timing fault without leaving
+related faulty traces feasible.
 
-Second, relation-guided optimization improves search efficiency and
-candidate quality. Property relations help avoid repeatedly solving
-equivalent obligations. Counterexample relations identify traces that
-share path fragments or repair variables. Repair-variable relations
-focus the solver on clock bounds close to the observed violations
-rather than opening all syntactically editable bounds in the model. In
-the ablation analysis, removing relation guidance increased the number
-of generated candidates and the frequency of regression failures.
-Successful repairs typically modified only one or two clock bounds, and
-the average edit magnitude remained close to the injected fault size,
-which makes the suggested repairs easier for engineers to inspect.
+Second, relation-guided optimization works together with precise MaxSMT
+objectives to improve candidate quality. In the ablation analysis,
+removing this optimization increased the frequency of regression
+failures. By identifying diagnostic traces that share path fragments or
+repair variables, the solver can focus on numerical clock bounds close
+to the observed violations while also penalizing large edit magnitudes.
+Successful repairs therefore typically modify only one or two critical
+clock bounds, which makes the resulting suggestions easier for human
+engineers to inspect and validate.
 
 \subsection{Discussion and Practical Lessons}
 
-The evaluation highlights several practical lessons for applying
-automated repair to industrial timed automata. First, full-property
-regression testing is necessary. Industrial properties are often
-interdependent: a local fix that satisfies a response monitor can
+The evaluation highlights several lessons for applying automated repair
+to industrial timed automata. First, full-property regression testing is
+necessary. Industrial properties are often highly interdependent: a
+localized fix that satisfies a liveness-like response monitor can
 violate a separate safety monitor that constrains maximum waiting time.
-MPTA-Repair avoids accepting such regressions by treating restoration of
-the full property set as a global objective rather than as a sequence of
-isolated local patches.
+MPTA-Repair avoids accepting such behavioral regressions by treating
+restoration of the full property set as a global objective rather than
+as a sequence of isolated local patches.
 
 Second, admissibility changes the meaning of repair success. Without
-checking functional equivalence, a solver could satisfy a timed property
-by disabling intended behavior, for example by blocking a necessary
-communication response or preventing a critical action. Such a candidate
-may eliminate the observed timed diagnostic trace, but it is not a valid
-repair for an industrial model. The admissibility check therefore
-prevents property satisfaction from being achieved through unacceptable
-loss of untimed behavior.
+checking structural and functional equivalence, a solver could satisfy a
+timed property by disabling intended behavior, for example by preventing
+a critical action or blocking a necessary communication response. Such a
+candidate may eliminate the targeted timed diagnostic trace, but it is
+not a valid repair for an industrial model. The admissibility check
+therefore prevents property satisfaction from being achieved through
+unacceptable loss of untimed behavior.
 
-Finally, the unrepaired cases show the limits of the current repair
-space. Some attempts fail because of solver, verification, or
-admissibility timeouts, and some models use syntax outside the supported
-fragment. Other cases appear to lack a feasible repair within numerical
-clock-bound edits alone. These failures suggest that broader repair
-actions, such as changing synchronization labels, clock resets, or
-discrete data updates, are an important direction for future work.
+Finally, the unrepaired cases reveal several limits of the current
+repair space. Solver, verification, and admissibility timeouts account
+for only part of the failures, and some models use syntax outside the
+supported fragment. In highly coupled domains such as cardiac pacing,
+some errors require paired and consistent adjustments across both guards
+and invariants, which increases the difficulty of the search. Incomplete
+diagnostic trace coverage returned by the verification engine can also
+lead to residual overfitting. Most fundamentally, some complex cases do
+not appear to have a feasible candidate within numerical clock-bound
+edits alone. These limitations suggest that future work should consider
+broader repair actions, such as changing synchronization labels,
+adjusting clock resets, or redesigning discrete data updates, while
+still preserving the functional intent of the model.
