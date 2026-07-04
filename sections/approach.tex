@@ -1,59 +1,62 @@
-﻿\section{Approach}
+\section{Approach}
 \label{sec:approach}
+
 \subsection{Overview}
 
-MPTA-Repair is a counterexample-guided repair workflow for
-multi-property, multi-counterexample clock-bound repair of
-industrial timed-automata models \cite{clarke2000cegar}. Its input is a faulty model
-\texttt{M}, a property set \texttt{Φ\ =\ \{φ1,\ ...,\ φm\}}, and
-configuration parameters such as the maximum number of refinement
-rounds, candidate limits, and a global timeout. The repairable bounds
-are not given as a separate user input; they are extracted from the
-numerical clock bounds occurring in transition guards and location
-invariants \cite{koelbl2019clock}. The output is either a repaired model
-\texttt{M'} together with a set of clock-bound edits,
-or a failure report explaining why no admissible full-property repair
-was found within the configured budget.
+MPTA-Repair is a counterexample-guided framework designed for the
+multi-property, multi-counterexample clock-bound repair of industrial
+timed-automata models \cite{clarke2000cegar}. The framework takes as
+input a faulty model $M$, a property set
+$\Phi=\{\varphi_1,\ldots,\varphi_m\}$, and configuration parameters
+including the maximum number of refinement rounds, candidate limits, and
+a global timeout. Rather than requiring separate user input, repairable
+bounds are directly extracted from the numerical clock bounds within
+transition guards and location invariants \cite{koelbl2019clock}. The
+output is either a repaired model $M'$ along with a set of clock-bound
+edits, or a failure report indicating that no admissible full-property
+repair was identified within the allocated budget.
 
-The workflow is designed around two principles. First, candidate repair
-generation may be driven by local diagnostic traces, but candidate
-acceptance must be global. A candidate that repairs one violated
-property may cause another property to fail, because the same clock,
-location, transition, or synchronization may participate in several
-timing requirements. MPTA-Repair therefore keeps collecting
-counterexamples from newly violated properties and uses them to further
-restrict the set of admissible repair candidates. This refinement
-continues until a candidate satisfies the complete property set and
-passes admissibility checking, or until the configured budget is
-exhausted. In our evaluation, we use a fixed timeout, for example 10
-minutes per repair instance, to avoid unbounded refinement \cite{jia2011mutation}.
+The core architecture operates on two primary insights. While candidate
+repair generation can be driven by local diagnostic traces, candidate
+validation must remain global. A candidate that resolves a single
+violated property might induce failures in others, because shared
+clocks, locations, transitions, or synchronizations often participate in
+multiple timing requirements. Consequently, MPTA-Repair iteratively
+collects counterexamples from newly violated properties to progressively
+constrain the admissible repair candidates. This refinement loop
+continues until a candidate satisfies the entire property set and passes
+admissibility verification, or until the configured budget is exhausted.
+For instance, a fixed timeout of 10 minutes per repair instance can be
+enforced to prevent unbounded refinement \cite{jia2011mutation}.
 
-Second, multiple properties and multiple diagnostic traces are not
-treated as unrelated repair subproblems. A single faulty timing bound
-may contribute to several violations, and several traces may expose
-different timing realizations of the same underlying defect. MPTA-Repair
-therefore maintains a pool of property-trace obligations and searches
-for a clock-bound assignment that satisfies all currently encoded
-obligations. Relation analysis among properties, traces, and repairable
-bounds is used to reduce redundant work and guide the search, but it is
-not used as a substitute for verification \cite{clarke2000cegar}.
+Multiple properties and diagnostic traces are treated as interconnected
+elements rather than isolated subproblems. A single erroneous timing
+bound can contribute to multiple violations, and distinct traces may
+manifest different executions of the same underlying fault. To leverage
+this interdependence, MPTA-Repair maintains a joint pool of
+property-trace obligations and searches for a clock-bound assignment
+that simultaneously satisfies all encoded constraints. Relation analysis
+across properties, traces, and repairable bounds minimizes redundant
+computation and guides search-space exploration, while formal
+verification remains the final correctness boundary \cite{clarke2000cegar}.
 
-At a high level, MPTA-Repair proceeds as follows. It verifies the model
-against all properties, collects TDTs for violated properties, extracts
-repairable clock-bound values, and builds a joint MaxSMT repair problem
-from the current property-trace pool. The resulting assignment is
-instantiated into a candidate model. The candidate is then checked
-against the complete property set and against a TARTAR-style
-admissibility criterion \cite{koelbl2019clock}. If validation fails, the rejected
-assignment is blocked, newly observed diagnostic traces are added, and
-the repair loop continues.
+In operation, MPTA-Repair first verifies the model against the property
+set, collects timed diagnostic traces (TDTs) for any violations,
+extracts repairable clock bounds, and constructs a joint MaxSMT repair
+problem from the active property-trace pool. The computed assignment is
+then instantiated into a candidate model, which is validated against the
+complete property set and a TARTAR-style admissibility criterion
+\cite{koelbl2019clock}. If validation fails, the assignment is blocked,
+newly identified diagnostic traces are integrated into the pool, and the
+refinement loop repeats.
 
-Figure~\ref{fig:mpta-repair-workflow} summarizes the resulting workflow.
-The initial verification stage produces the property-trace pool, the
-relation-guided stage organizes properties, counterexamples, and
-repairable bounds, and the MaxSMT stage generates candidate edits. The
-final validation gates either accept a fully admissible repair or feed
-new diagnostic evidence back into the next refinement round.
+Figure~\ref{fig:mpta-repair-workflow} illustrates the overall workflow.
+The initial verification stage populates the property-trace pool, the
+relation-guided optimization phase structures dependencies among
+properties, counterexamples, and repairable bounds, and the MaxSMT
+solving stage generates candidate edits. Finally, the validation
+component either accepts a fully admissible repair or feeds new
+diagnostic evidence back into the subsequent refinement round.
 
 \begin{figure*}[t]
   \centering
@@ -62,155 +65,133 @@ new diagnostic evidence back into the next refinement round.
   \label{fig:mpta-repair-workflow}
 \end{figure*}
 
-\subsection{Bound Variation and Joint Trace Encoding}
+\subsection{Joint Trace Encoding and Optimization Objective}
 
-MPTA-Repair follows the bound-variation view used in clock-bound repair
-\cite{koelbl2019clock}. Each editable numerical bound in a guard or
-invariant is associated with a variation variable, so a repaired
-constraint has the same clock reference and comparison operator as the
-original constraint but a shifted numerical value. The current repair
-pipeline therefore changes only clock-bound constants. Transition
-structure, location structure, synchronization labels, reset sets, and
-discrete updates are outside the main repair space.
+MPTA-Repair adopts the bound-variation paradigm for clock-bound repair
+\cite{koelbl2019clock}. Each modifiable numerical bound in a transition
+guard or location invariant is associated with a variation variable,
+ensuring that the repaired constraint retains the original clock
+reference and comparison operator while incorporating a shifted
+numerical value. Consequently, the repair space is restricted to
+clock-bound constants, whereas transition structures, location
+topologies, synchronization labels, reset sets, and discrete updates
+remain unaltered.
 
-For each diagnostic trace, MPTA-Repair constructs a TARTAR-style trace
-constraint system \cite{koelbl2019clock}. The encoding contains the
-standard conditions for clock initialization, time elapse, clock resets,
-guard satisfaction, and invariant satisfaction along the observed trace.
-The only difference from the original trace constraints is that
-repairable bounds are replaced by their varied values. This keeps the
-discrete trace skeleton visible to the solver while allowing the timing
-region of that skeleton to change.
+For each diagnostic trace, the framework constructs a TARTAR-style trace
+constraint system \cite{koelbl2019clock} encompassing standard
+conditions for clock initialization, time elapse, clock resets, guard
+satisfaction, and invariant satisfaction. By replacing original clock
+bounds with their varied counterparts, this formulation preserves the
+discrete trace skeleton within the solver while allowing its timing
+region to change. For a violated property and diagnostic trace, the
+resulting obligation serves two purposes. It ensures post-repair
+executability of the discrete trace skeleton to prevent trivial
+elimination of functional paths, and it requires that no feasible timing
+realization of this skeleton violates the target property. Local
+obligations therefore isolate violating timed behaviors without blocking
+the underlying functional execution.
 
-For each violated property and diagnostic trace, the repair obligation
-has two roles. First, it preserves the executability of the same
-discrete trace skeleton after repair, so the method does not remove a
-functional path merely to avoid the violation. Second, it requires that
-no feasible timing realization of that skeleton still violates the
-considered property. In this way, the local obligation blocks the
-violating timed behavior rather than blocking the underlying functional
-behavior.
+To guarantee physical validity during candidate generation, static
+consistency constraints are embedded directly into the formulation
+\cite{demoura2008z3}. Repaired bounds must lie within the supported
+numerical domain. Furthermore, when a lower bound and an upper bound
+jointly constrain the same clock within a local region, their repaired
+values must maintain a consistent timing interval.
 
-MPTA-Repair builds one joint MaxSMT problem from the current pool of
-property-trace obligations. The hard part of the problem includes all
-encoded trace obligations, well-formedness constraints for repaired
-bounds, and blocking constraints for candidates that have already failed
-validation. The soft part prefers unchanged bounds. Maximizing these
-soft constraints minimizes the number of edited clock bounds
-\cite{sebastiani2015optimization}; when needed, a secondary objective
-minimizes the total magnitude of the nonzero edits. If a candidate is
-rejected by full-property regression or admissibility, the refinement
-loop records a blocking constraint so that the same assignment is not
-returned again. This generalizes single-trace repair from one diagnostic
-trace to a pool of currently relevant property-trace obligations.
+From the active pool of property-trace obligations, MPTA-Repair
+assembles a joint MaxSMT problem. The hard constraints include all
+encoded trace obligations, static consistency requirements,
+well-formedness conditions for repaired bounds, and blocking constraints
+derived from previously rejected candidates. The optimization objective
+is governed by a hierarchical set of simple soft constraints
+\cite{sebastiani2015optimization}. The primary objective minimizes the
+number of altered clock bounds by maximizing soft constraints of the
+form $v=0$. Among candidate solutions with the same number of
+modifications, a secondary objective minimizes the total magnitude of
+the variations. This optimization strategy aligns with the engineering
+goal of generating minimal, human-inspectable repairs and deliberately
+avoids speculative metrics such as semantic risk or causal relevance.
+Relation analysis is instead used externally to select or rank repair
+variables and obligations before and around the solving phase.
 
 \subsection{Relation-Guided Search Optimization}
 
-As refinement proceeds, the number of violated properties, diagnostic
-traces, and editable clock bounds may grow \cite{clarke2000cegar}. Encoding every
-possible obligation and every editable bound without organization can
-make the MaxSMT problem larger and may lead to repeated solving over
-redundant evidence. MPTA-Repair therefore uses relation analysis as a
-search optimization. These relations guide pruning, grouping, and
-ranking, but every accepted repair is still validated by full-property
-regression and admissibility.
+During successive refinement rounds, the accumulation of violated
+properties, diagnostic traces, and editable clock bounds can
+significantly expand the search space \cite{clarke2000cegar}.
+Unstructured encoding of all property-trace obligations and repairable
+bounds increases the complexity of the MaxSMT problem and can induce
+redundant solving cycles over overlapping evidence. To mitigate this
+overhead, MPTA-Repair introduces relation-guided optimization to prune,
+group, and rank variables and constraints. These relation-based
+heuristics serve strictly as search optimizations; validity and
+admissibility of generated candidates are still guaranteed through
+full-property regression and formal verification.
 
-At the property layer, MPTA-Repair handles safety properties in a
-practical normalized fragment. A property is normalized into an
-\texttt{A{[}{]}}-style condition over location predicates and clock or
-integer comparisons \cite{vogel2022patterns}. The relation analysis uses
-conservative syntactic and formula-level rules. Two properties are
-treated as equivalent only when their normalized forms are identical.
-Dominance is used only when it can be established safely, such as when
-two upper-bound properties differ only in the numerical threshold and
-one threshold is strictly stronger than the other. Similar rules apply
-only when the target predicate, clock, and operator pattern match after
-normalization. Shared clocks, target locations, and templates are
-recorded as dependency information, but they are not by themselves used
-to remove obligations.
+At the property layer, MPTA-Repair operates on safety properties
+normalized into an $\mathtt{A}[]$ fragment over location predicates and
+clock or integer constraints \cite{vogel2022patterns}. Relation analysis
+uses conservative syntactic and structural rules to evaluate equivalence
+and dominance. Two properties are equivalent only when their normalized
+representations are syntactically identical. Dominance is established
+only when clear logical subsumption holds, for example when two
+upper-bound properties share identical structures but differ in their
+numerical thresholds and one threshold strictly implies the other.
+Shared clocks, target locations, and template structures are tracked as
+dependency metadata, but they do not independently justify removing
+obligations.
 
-At the counterexample layer, MPTA-Repair maintains a pool of TDTs
-associated with violated properties. Exact duplicates are removed, and
-traces are annotated with their involved transitions, locations, clocks,
-guard bounds, invariant bounds, and source properties \cite{koelbl2019clock}.
-Structural similarity, shared prefixes, and shared repair variables are
-used to organize the pool and explain why certain traces should be
-considered together. However, a trace is removed from the active
-obligation set only when it is an exact duplicate or when a sound
-subsumption check shows that its local obligation is covered by another
-encoded obligation. Otherwise, the trace remains available for joint
-encoding.
+At the counterexample layer, the framework maintains a managed pool of
+TDTs indexed by their corresponding violated properties. Redundant
+traces are eliminated through exact-duplicate removal. The remaining
+TDTs are annotated with structural features, including traversed
+transitions, visited locations, active clocks, guard and invariant
+bounds, and originating properties \cite{koelbl2019clock}. Structural
+similarity, common prefixes, and shared repair variables are used to
+cluster related traces and orchestrate joint solving. A trace obligation
+is deactivated only when an exact duplicate is detected or when a sound
+subsumption check proves that its local constraint profile is covered by
+an existing encoded obligation.
 
-At the repair-bound layer, MPTA-Repair maps each property-trace
-obligation to the clock-bound values that can affect it. This mapping
-helps restrict the active repair variables to those appearing in or
-influencing the current counterexample pool. It also helps order
-candidate generation when several bounds are available. However,
-relation scores do not prove correctness, and they do not force the
-solver to modify a particular bound. They only reduce the search effort
-by avoiding unrelated repair variables when the current counterexample
-evidence gives no reason to open them.
-
-\subsection{Optimization Objective}
-
-The MaxSMT objective is intentionally simple \cite{sebastiani2017maxsmt}. The primary
-objective is to minimize the number of changed clock bounds by
-maximizing soft constraints of the form \texttt{v\ =\ 0}. Among
-candidates with the same number of changed bounds, the implementation
-may minimize the total magnitude of the changes. This follows the
-engineering goal of producing small and inspectable repairs.
-
-MPTA-Repair does not optimize directly for speculative notions such as
-semantic risk or causal relevance. Relation analysis is used before and
-around solving to select or rank repair variables and obligations. The
-solver objective itself remains centered on minimality of the edit set
-and, when enabled, magnitude of the edit values.
-
-Static consistency constraints are enforced during candidate generation
-\cite{demoura2008z3}. Repaired bounds must remain in the supported numerical domain.
-When a lower and an upper bound jointly constrain the same clock in a
-local region, the repaired values must not make the timing interval
-inconsistent. Since operators and clock references are fixed in the
-current repair space, generated assignments change only numerical bound
-values \cite{andre2019repairing}.
+At the repair-bound layer, MPTA-Repair establishes a mapping between
+each active property-trace obligation and the clock bounds capable of
+influencing its feasibility. This mapping restricts the active decision
+variables in the MaxSMT problem to those directly relevant to the
+current counterexample pool, while providing a heuristic ordering for
+candidate generation. Rather than imposing rigid structural constraints
+or hard-coding specific modifications, relation scores serve as an
+adaptive guidance mechanism. They improve search efficiency by
+dynamically deactivating irrelevant repair variables, ensuring that the
+solver concentrates on dimensions supported by counterexample evidence.
 
 \subsection{Validation, Admissibility, and Refinement}
 
-Candidate validation is the main correctness boundary of MPTA-Repair
-\cite{clarke1999model}. After applying a candidate edit set, the repaired model is
-verified against every property in \texttt{Φ}. A candidate that repairs
-the triggering property but violates another property is rejected. Such
-a failure means that the current encoded trace pool was insufficient:
-the candidate satisfied all encoded local obligations, but the repaired
-model still has an execution that violates the complete specification.
-MPTA-Repair therefore collects the newly observed diagnostic trace and
-adds it to the pool for the next refinement round.
+Candidate validation serves as the primary correctness guarantee in
+MPTA-Repair \cite{clarke1999model}. After a candidate edit set is
+generated, the repaired model is verified against the entire property
+set $\Phi$. If a candidate resolves the triggering violation but
+introduces a failure in another property, it is rejected, indicating
+that the current property-trace pool is under-constrained. MPTA-Repair
+then extracts the newly observed diagnostic trace and appends it to the
+pool, steering the subsequent refinement round.
 
-After full-property regression succeeds, MPTA-Repair applies the
-TARTAR-style admissibility test based on functional equivalence \cite{koelbl2019clock}.
-This check is needed because a clock-bound edit may satisfy safety
-properties by preventing intended behavior from occurring. TARTAR
-observes that timed-language equivalence is not a suitable admissibility
-criterion, because a successful timing repair is expected to remove at
-least some violating timed realizations \cite{koelbl2019clock}. Instead, functional
-equivalence compares the untimed languages of the original and repaired
-models \cite{hopcroft2001automata}. Intuitively, the repaired model should not add or
-remove functional action traces, even though the timing of those traces
-may change.
+Candidates that pass full-property regression are further evaluated
+against a TARTAR-style admissibility criterion based on functional
+equivalence \cite{koelbl2019clock}. This step ensures that clock-bound
+modifications do not satisfy safety properties by disabling intended
+system behaviors. Rather than enforcing timed-language equivalence,
+which would conflict with the goal of eliminating violating timed paths,
+admissibility is checked by constructing untimed automata from both the
+original and repaired models and comparing their accepted untimed
+languages \cite{hopcroft2001automata}. A candidate is rejected if it
+adds or removes discrete functional paths, ensuring that only timing
+characteristics are changed.
 
-In implementation, this criterion is checked by constructing untimed
-automata from the original and repaired timed models and comparing their
-accepted untimed languages \cite{bouyer2022zone}. If the languages differ, the repair
-is rejected and a separating behavior can be reported when available.
-Only candidates that pass both full-property regression and
-functional-equivalence admissibility are accepted.
-
-The refinement loop therefore combines local repair generation with
-global validation. Local TDT encodings generate candidate bound
-assignments; full-property regression rejects candidates that do not
-satisfy the complete specification; admissibility rejects candidates
-that satisfy the properties by changing functional behavior; and
-blocking constraints prevent repeated failed assignments. The final
-result is a repair that satisfies the currently stated multi-property
-specification while preserving the intended untimed behavior of the
-model.
+The refinement loop therefore establishes a closed-loop mechanism that
+pairs local candidate generation with global validation. Local MaxSMT
+formulations propose candidate assignments, full-property regression
+ensures complete specification compliance, and functional-equivalence
+checking preserves the underlying discrete structure. Blocking
+constraints prevent recurrence of failed assignments, ultimately
+yielding a repair that satisfies the multi-property specification while
+preserving the intended untimed model semantics.
