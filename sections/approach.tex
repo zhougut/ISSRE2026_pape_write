@@ -4,58 +4,56 @@
 \subsection{Overview}
 
 MPTA-Repair is a counterexample-guided framework designed for the
-multi-property, multi-counterexample clock-bound repair of industrial
-timed-automata models \cite{clarke2000cegar}. The framework takes as
-input a faulty model $M$, a property set
-$\Phi=\{\varphi_1,\ldots,\varphi_m\}$, and configuration parameters
-including the maximum number of refinement rounds, candidate limits, and
-a global timeout. Rather than requiring separate user input, repairable
-bounds are directly extracted from the numerical clock bounds within
-transition guards and location invariants \cite{koelbl2019clock}. The
+multi-property clock-bound repair of timed automata models. The
+framework takes as input a faulty model $M$, a property set
+$\Phi=\{\varphi_1,\ldots,\varphi_m\}$, and configuration parameters such
+as a global timeout. Instead of requiring users to manually specify
+repair variables, MPTA-Repair extracts repairable bounds from numerical
+clock constraints in transition guards and location invariants. The
 output is either a repaired model $M'$ along with a set of clock-bound
 edits, or a failure report indicating that no admissible full-property
-repair was identified within the allocated budget.
+repair was identified within the given time budget.
 
-The core architecture operates on two primary insights. While candidate
-repair generation can be driven by local diagnostic traces, candidate
-validation must remain global. A candidate that resolves a single
-violated property might induce failures in others, because shared
-clocks, locations, transitions, or synchronizations often participate in
+MPTA-Repair is based on two observations. First, while candidate repair
+generation can be driven by local diagnostic traces, candidate
+validation must remain global. A candidate that repairs one violated
+property might induce failures in others, because shared clocks,
+locations, transitions, or synchronizations often participate in
 multiple timing requirements. Consequently, MPTA-Repair iteratively
-collects counterexamples from newly violated properties to progressively
-constrain the admissible repair candidates. This refinement loop
-continues until a candidate satisfies the entire property set and passes
-admissibility verification, or until the configured budget is exhausted.
-For instance, a fixed timeout of 10 minutes per repair instance can be
-enforced to prevent unbounded refinement \cite{jia2011mutation}.
+collects counterexamples from subsequent violations to progressively
+constrain the space of admissible repair candidates. This refinement
+loop continues until a candidate satisfies the entire property set and
+passes admissibility verification, or the given time budget is
+exhausted.
 
-Multiple properties and diagnostic traces are treated as interconnected
-elements rather than isolated subproblems. A single erroneous timing
-bound can contribute to multiple violations, and distinct traces may
-manifest different executions of the same underlying fault. To leverage
-this interdependence, MPTA-Repair maintains a joint pool of
-property-trace obligations and searches for a clock-bound assignment
-that simultaneously satisfies all encoded constraints. Relation analysis
-across properties, traces, and repairable bounds minimizes redundant
-computation and guides search-space exploration, while formal
-verification remains the final correctness boundary \cite{clarke2000cegar}.
+Second, different properties and diagnostic traces are often related
+through shared repairable bounds. A single erroneous timing bound can
+contribute to multiple violations, and distinct traces may correspond to
+different executions of the same underlying fault. To leverage this
+interdependence, MPTA-Repair maintains a joint pool of property-trace
+obligations and searches for a clock-bound assignment that
+simultaneously satisfies all encoded constraints while minimizing the
+total modification cost. Relational analysis across properties, traces,
+and repairable bounds serves to minimize redundant computations and
+guide the search space exploration, though the generated candidates must
+ultimately pass verification and admissibility checks.
 
-In operation, MPTA-Repair first verifies the model against the property
-set, collects timed diagnostic traces (TDTs) for any violations,
-extracts repairable clock bounds, and constructs a joint MaxSMT repair
-problem from the active property-trace pool. The computed assignment is
-then instantiated into a candidate model, which is validated against the
-complete property set and a TARTAR-style admissibility criterion
-\cite{koelbl2019clock}. If validation fails, the assignment is blocked,
+In operation, MPTA-Repair initially verifies the model against the
+property set and collects timed diagnostic traces (TDTs) for any
+violations. It then extracts repairable clock bounds and constructs a
+joint MaxSMT repair problem from the active property-trace pool. The
+computed assignment is instantiated into a candidate model, which
+undergoes validation against the complete property set and a
+functional-equivalence admissibility criterion. If validation fails,
 newly identified diagnostic traces are integrated into the pool, and the
 refinement loop repeats.
 
 Figure~\ref{fig:mpta-repair-workflow} illustrates the overall workflow.
-The initial verification stage populates the property-trace pool, the
-relation-guided optimization phase structures dependencies among
-properties, counterexamples, and repairable bounds, and the MaxSMT
-solving stage generates candidate edits. Finally, the validation
-component either accepts a fully admissible repair or feeds new
+The initial verification stage populates the property-trace pool.
+Subsequently, the relation-guided optimization phase structures the
+dependencies among properties, counterexamples, and repairable bounds.
+Finally, the MaxSMT solving stage generates candidate edits. The
+validation component either accepts an admissible repair or feeds new
 diagnostic evidence back into the subsequent refinement round.
 
 \begin{figure*}[t]
