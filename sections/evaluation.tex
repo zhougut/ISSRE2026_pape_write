@@ -1,180 +1,173 @@
 \section{Implementation and Experimental Evaluation}
 \label{sec:evaluation}
 
-This section details the implementation of MPTA-Repair and evaluates
-its effectiveness across benchmark and industrial case studies. To
-maintain practical applicability, our methodology focuses on repairing
+This section presents the implementation of MPTA-Repair and evaluates
+its performance on both benchmark and industrial case studies. To
+ensure practical utility, our approach focuses exclusively on repairing
 numerical clock bounds within transition guards and location invariants,
-while avoiding arbitrary alterations to the discrete transition logic.
-This parametric repair space is pragmatic for industrial contexts,
-because it can correct clerical modeling mistakes and support
-redimensioning of system timing resources without disrupting the
-intended functional design. We further compare MPTA-Repair with an
-iterative baseline extended from the TARTAR paradigm
-\cite{koelbl2020tartar}; the comparison illustrates why multi-property
-regression and multi-counterexample analysis are necessary to avoid
-secondary errors during repair.
+rather than altering the discrete transition logic. This parametric
+repair space is suitable for industrial systems, as it corrects
+clerical errors and optimizes timing resources without disrupting the
+underlying functional design. In addition, comparing MPTA-Repair with
+an iterative baseline extended from the TARTAR paradigm
+\cite{koelbl2020tartar} demonstrates that multi-property regression and
+multi-counterexample analysis are essential to prevent secondary
+errors.
 
 \subsection{Prototype Implementation}
 
-We implemented MPTA-Repair as an incremental repair pipeline that
-systematically processes a faulty system into a validated repair
-candidate or a failure report. The pipeline uses a timed-automata
-parser, a verification interface based on UPPAAL \cite{larsen1997uppaal},
-a Z3-powered MaxSMT backend \cite{demoura2008z3}, and an admissibility
-checker. Inspired by a control-loop architecture, the pipeline computes
-repairs through the following sequential stages.
+We implemented MPTA-Repair as an incremental pipeline that takes a
+faulty model and produces a validated repaired model or a failure
+report. The tool integrates a timed-automata parser, a verification
+interface using UPPAAL \cite{larsen1997uppaal}, a Z3-powered MaxSMT
+backend \cite{demoura2008z3}, and an admissibility checker. Modeled
+after a control-loop architecture, the pipeline executes the following
+steps.
 
-\textbf{Input and initial verification.} The pipeline ingests the
-faulty model, property set, and configuration parameters. It extracts
+\textbf{Input and initial verification.} The pipeline reads the faulty
+model, properties, and configurations. The verification engine extracts
 editable clock-bound variables from transition guards and location
-invariants, then invokes full-property verification to generate an
-initial property-trace pool containing timed diagnostic traces for all
-violated properties.
+invariants, generating an initial trace pool of timed diagnostic traces
+for all violated properties.
 
-\textbf{Relation-guided search and optimization.} The trace analyzer
-maps observed diagnostic traces to the extracted repair variables. A
-relation-analysis mechanism performs pruning, grouping, and ranking by
-establishing dependencies among properties, counterexamples, and repair
-sites. This mapping structures the repaired-bound search space and
-reduces the computational burden of candidate generation.
+\textbf{Relation-guided search and optimization.} This module maps the
+diagnostic traces to the extracted variables. A relation-analysis
+mechanism prunes, groups, and ranks these variables by identifying
+logical dependencies among properties, counterexamples, and repair
+locations. This mapping structures the repair constraints and reduces
+the search space.
 
-\textbf{MaxSMT solving and candidate generation.} The optimized repair
-evidence is encoded into a MaxSMT problem with hard constraints for
-trace feasibility, well-formedness, and blocking, together with soft
-constraints that prefer minimal modifications. Once the solver
-synthesizes a viable assignment, the model writer instantiates the
-corresponding candidate model.
+\textbf{MaxSMT solving and candidate generation.} The optimized data is
+passed to the MaxSMT solver, which constructs a constraint system. This
+system includes hard constraints for trace feasibility, well-formedness,
+and blocking criteria, along with soft constraints designed to minimize
+modifications. Once a solution is found, a model writer generates the
+candidate model.
 
-\textbf{Full validation and refinement.} Each candidate is evaluated by
-two consecutive validation gates. The first gate performs full-property
-regression verification through UPPAAL to prevent collateral property
-violations. The second gate performs an acceptability check for untimed
-functional equivalence using a TARTAR-style criterion
-\cite{koelbl2019clock}; candidates that alter functional untimed
-behavior are rejected.
+\textbf{Full validation and refinement.} The candidate model must pass
+two validation steps to ensure timing correctness and behavioral
+equivalence. First, full-property regression verification through UPPAAL
+ensures that no new violations are introduced. Second, an acceptability
+check evaluates untimed functional equivalence using a TARTAR-style
+criterion \cite{koelbl2019clock}, rejecting candidates that alter the
+functional, untimed behavior.
 
-\textbf{Iteration.} If either validation gate rejects a candidate, the
-control loop feeds newly exposed diagnostic traces back into the trace
-pool. This initiates another counterexample-guided refinement iteration,
-which further constrains the solver with updated evidence until a
-globally admissible repair is found or the configured search budget is
-exhausted.
+\textbf{Iteration.} If a candidate fails either validation step, the
+control loop feeds the newly discovered diagnostic traces back into the
+trace pool. This initiates a counterexample-guided refinement loop,
+updating the solver constraints until a globally valid repair is found
+or the search budget is exhausted.
 
 \subsection{Evaluation Strategy and Datasets}
 
-To evaluate MPTA-Repair, we use two dataset groups designed to exercise
-different operational dimensions, with statistics summarized in
-Table~\ref{tab:dataset-statistics}. The benchmark dataset contains nine
-established models selected from standard UPPAAL and XtaBenchmarkSuite
-sources, including examples such as Elevator and FDDI. These models
-provide structural diversity and support comparison with existing
-single-trace repair settings. The industry dataset contains four
-coupled industrial case studies: the Gear Control System for automotive
-transmission, SAE RoR for autonomous-driving decision making, Train
-Controller Alarm for railway emergency timing, and Train Gate
-Controller for shared-resource concurrency. Unlike many standard
-benchmarks, these industrial models contain dense multi-property timing
-constraints.
+To evaluate MPTA-Repair, we use two datasets with different
+characteristics, summarized in Table~\ref{tab:dataset-statistics}. The
+benchmark dataset includes nine standard models from UPPAAL and the
+XtaBenchmarkSuite, such as Elevator and FDDI, providing structural
+diversity for baseline comparison. The industrial dataset contains four
+closely coupled industrial case studies: Gear Control System for
+automotive transmission, SAE RoR for autonomous-driving decisions, Train
+Controller Alarm for railway emergency timing, and Train Gate Controller
+for shared-resource concurrency. Unlike the benchmarks, these
+industrial models contain dense timing constraints across multiple
+properties.
 
 \input{tables/dataset-statistics}
 
-Because naturally occurring faulty timed automata are scarce, we
-synthesize faulty instances using a mutation-based evaluation strategy
-\cite{jia2011mutation}. Fault injection strictly modifies numerical
-clock-bound constants in guards and invariants, deliberately excluding
-arbitrary structural logic changes. Simple mutants contain a localized
-single-point modification. Complex mutants use a two-fault effective
-mutation strategy that combines two non-redundant single-point faults.
-These combinations are filtered to retain only instances in which both
-faults contribute to the property violation. All retained mutants must
-remain syntactically valid, violate at least one selected timing safety
-specification, and pass a preliminary admissibility screen ensuring that
-the original non-timing functional behavior is preserved before repair.
+Since real-world faulty timed automata are rare, we synthesize faulty
+instances using mutation \cite{jia2011mutation}. Fault injection
+modifies only numerical clock-bound constants in guards and invariants,
+excluding structural changes. Simple mutants contain a single localized
+modification, while complex mutants combine two non-redundant
+single-point faults. We filter these combinations to ensure that both
+faults contribute to the property violation. All retained mutants are
+syntactically valid, violate at least one timing safety specification,
+and pass an initial admissibility check to ensure their original untimed
+functional behavior is preserved before repair.
 
-We compare MPTA-Repair with an adapted iterative TARTAR-style baseline
-\cite{koelbl2020tartar}. To ensure fairness, this baseline uses the
-same full-property regression and admissibility validation gates as
-MPTA-Repair. The key methodological difference is that the baseline
-derives repairs from only one property or diagnostic trace at a time.
-Because it lacks the joint multi-counterexample relation analysis used
-by MPTA-Repair, it is more prone to localized optimization and
-overfitting to isolated fault paths. The comparison therefore evaluates
-the benefit of treating properties, counterexamples, and repair
-variables as joint repair evidence.
+We compare MPTA-Repair against an adapted iterative TARTAR-style
+baseline \cite{koelbl2020tartar}. For fairness, this baseline uses the
+same regression and admissibility validation steps as our method. The
+primary difference is that the baseline derives repairs from only one
+property or diagnostic trace at a time. Because it lacks the joint
+multi-counterexample relation analysis used in our framework, the
+baseline often gets stuck in local optima and overfits to isolated fault
+paths. This comparison highlights the importance of analyzing
+properties, counterexamples, and repair variables simultaneously.
 
 \subsection{Experimental Results}
 
-The experimental evaluation shows that MPTA-Repair outperforms the
-iterative baseline, particularly on complex industrial models. As shown
-in Table~\ref{tab:overall-results}, the baseline achieves a 72\% success
-rate on the standardized benchmark dataset, whereas MPTA-Repair reaches
-93\%. The performance gap widens on the industry dataset, where the
-baseline repairs only 20\% of the cases compared with 76\% for
-MPTA-Repair. These results indicate that the proposed workflow remains
-effective on established timed-automata benchmarks while providing
-stronger robustness when properties and traces interact in dense
-industrial systems.
+The experimental evaluation demonstrates that MPTA-Repair outperforms
+the iterative baseline, particularly on complex industrial models. As
+shown in Table~\ref{tab:overall-results}, the baseline achieves a 72\%
+success rate on the benchmark dataset, whereas MPTA-Repair reaches
+93\%. This performance gap widens on the industrial dataset, where the
+baseline repairs only 20\% of the cases compared to 76\% for
+MPTA-Repair. These results indicate that our approach remains effective
+on standard timed-automata benchmarks while demonstrating robustness in
+complex industrial systems where properties and traces interact closely.
 
 \input{tables/overall-results}
 
-The baseline remains competitive on simpler benchmark models because
-timing errors are often concentrated on isolated guards or invariants.
-In such localized scenarios, a single diagnostic trace may provide
-enough evidence to infer a correct repair. However, even within standard
-benchmarks with shared multi-channel structures, such as FDDI protocol
-models, MPTA-Repair is more robust because it prevents single-trace
-overfitting. This advantage becomes clearer in industrial models with
-interacting concurrent components, urgent or broadcast synchronization
-channels, observer templates, and array-based modeling constructs. In
-these settings, localized baseline repairs frequently fail subsequent
-global validation checks. Our analysis indicates that the baseline lacks
-explicit optimization for edit magnitude, which can produce extreme
-candidate bounds that fail admissibility, and that it struggles with the
-regression pressure imposed by three to nine coupled domain properties
-without jointly analyzing their counterexamples.
+The baseline is competitive on simpler benchmark models because timing
+errors are frequently concentrated on isolated guards or invariants. In
+these localized scenarios, a single diagnostic trace often provides
+sufficient information to infer a correct repair. However, even within
+standard benchmarks featuring shared multi-channel structures, such as
+the FDDI protocol, MPTA-Repair is more robust because it prevents
+single-trace overfitting. This advantage becomes more pronounced in
+complex industrial models that feature interacting concurrent
+components, urgent or broadcast synchronization channels, observer
+templates, and array-based constructs. In these settings, localized
+repairs by the baseline frequently fail subsequent global validation
+checks. Our empirical analysis shows that the baseline lacks explicit
+optimization to minimize edit magnitude, often generating extreme
+candidate bounds that violate admissibility. Additionally, the baseline
+struggles with regression verification over three to nine coupled
+properties because it does not analyze their corresponding
+counterexamples jointly.
 
-MPTA-Repair succeeds more frequently due to two architectural
+MPTA-Repair achieves higher success rates due to two primary design
 advantages. First, multi-counterexample accumulation reduces overfitting
-to any single timed diagnostic trace, which typically exposes only one
-timing realization of a deeper defect. By accumulating and analyzing
+to a single timed diagnostic trace, which typically exposes only one
+timing realization of an underlying fault. By accumulating and analyzing
 diagnostic traces from multiple operational modes, the framework
-synthesizes small joint edit sets that address the shared timing fault.
-Second, relation-guided optimization works with precise MaxSMT
-objectives to improve candidate quality. By identifying diagnostic
-traces that share path fragments or target repair variables, the solver
-focuses on numerical clock bounds close to the observed violations while
-penalizing large edit magnitudes. Successful repairs therefore typically
-modify only one or two critical clock bounds, which simplifies later
-manual inspection and verification by engineers.
+synthesizes minimal joint edit sets that address the timing fault
+comprehensively. Second, relation-guided optimization complements
+precise MaxSMT objectives to improve candidate quality. By identifying
+diagnostic traces that share path fragments or target repair variables,
+the solver focuses on modifying numerical clock bounds close to the
+observed violations while penalizing large edit magnitudes. Successful
+repairs therefore typically require modifying only one or two critical
+clock bounds, which facilitates subsequent manual inspection and
+verification.
 
 \subsection{Discussion and Practical Lessons}
 
-The evaluation highlights several lessons for applying automated repair
+The evaluation highlights several insights for applying automated repair
 to industrial timed automata. First, full-property regression testing is
-necessary. Because industrial system properties are highly
-interdependent, a localized fix designed only to satisfy a
-liveness-like response monitor can inadvertently violate a separate
-safety monitor that constrains maximum waiting time. MPTA-Repair avoids
-such behavioral regressions by treating restoration of the full property
-set as an indivisible global objective.
+necessary. Because industrial system properties are interdependent, a
+localized fix designed solely to satisfy a liveness-like response
+monitor can inadvertently violate a separate safety monitor that
+constrains maximum waiting times. MPTA-Repair avoids these behavioral
+regressions by treating overall property restoration as a global
+objective. Second, admissibility is critical to measuring repair
+success. Without ensuring structural and functional equivalence, a
+solver might satisfy a specific timing property by disabling the
+intended functional behavior, such as preventing a critical system
+action entirely. The strict admissibility check ensures that property
+satisfaction is not achieved at the expense of untimed functional
+behavior.
 
-Second, admissibility changes the meaning of repair success. Without
-checking structural and functional equivalence, a solver could satisfy a
-timed property by disabling intended behavior, for example by preventing
-a critical system action. The admissibility check prevents property
-satisfaction from being achieved through unacceptable loss of
-functional untimed behavior.
-
-Finally, failure analysis of unrepaired cases reveals limits of the
-current repair space. Computational timeouts and out-of-scope model
-syntax account for only part of the unsuccessful attempts. In highly
-coupled domains such as cardiac pacing, some errors require paired and
-consistent adjustments across both guards and invariants, which
-complicates the search space. Incomplete diagnostic trace coverage
-returned by the verification engine can also lead to residual
-overfitting. Most fundamentally, some complex cases lack a feasible
-candidate within the restricted clock-bound parameter space. This
-limitation suggests that future work should consider broader structural
-modifications, such as changing synchronization labels, adjusting clock
-resets, or redesigning discrete data updates.
+Our failure analysis reveals several limitations of the current repair
+space. Computational timeouts and unsupported model syntax account for
+only a portion of the unsuccessful repair attempts. In tightly coupled
+domains such as cardiac pacing, certain complex errors require
+simultaneous, consistent adjustments across both guards and invariants,
+which significantly expands the search space. Additionally, incomplete
+diagnostic trace coverage from the verification engine can occasionally
+lead to overfitting. Certain complex cases lacked any feasible candidate
+within the restricted clock-bound parameter space. This limitation
+suggests that repairing these models requires broader structural
+modifications, such as altering synchronization labels, adjusting clock
+resets, or modifying discrete data updates.
