@@ -71,26 +71,24 @@ transition guard or location invariant is associated with a variation
 variable $\delta_s$. This ensures that the repaired constraint retains
 the original clock reference and comparison operator while incorporating
 a shifted value:
-\begin{equation}
+\[
   b'_s = b_s + \delta_s .
-  \label{eq:bound-variation}
-\end{equation}
+\]
 The repair space is therefore strictly restricted to clock-bound
 constants, keeping transition structures and discrete updates unaltered.
 
 To formalize path constraints, MPTA-Repair adapts the trace-encoding
 formulation of TARTAR \cite{koelbl2019clock}. Given a timed diagnostic
 trace
-\begin{equation}
+\[
   \tau =
   \ell_0 \xrightarrow{d_0,e_0} \ell_1
   \cdots
   \xrightarrow{d_{n-1},e_{n-1}} \ell_n ,
-  \label{eq:tdt-trace}
-\end{equation}
+\]
 a violation trace for property $\varphi$ is encoded as a conjunction of
 linear arithmetic constraints:
-\begin{equation}
+\[
 \begin{aligned}
   &\operatorname{Enc}(\tau,\varphi,\theta) =
   \mathit{Init}(\nu_0) \\
@@ -106,8 +104,7 @@ linear arithmetic constraints:
   &\quad{}\land
   \mathit{Bad}_{\varphi}(\ell_n,\nu_n) .
 \end{aligned}
-\label{eq:trace-encoding}
-\end{equation}
+\]
 Here, $\mathit{Init}(\nu_0)$ initializes the clock valuations, while
 $d_i$, $\mathit{Inv}$, $\mathit{Guard}$, and $\mathit{Reset}_i$ define
 the non-negative delays, location invariants, transition guards, and
@@ -119,7 +116,7 @@ the discrete path skeleton, the single-trace repair obligation
 eliminates the vector of trace-specific delay and valuation variables
 $\mathbf{z}_{\tau}$ via a quantifier elimination operator
 $\operatorname{QE}$:
-\begin{equation}
+\[
   \Psi_{\tau,\varphi}(\theta)
   =
   \operatorname{QE}
@@ -127,19 +124,17 @@ $\operatorname{QE}$:
     \neg \exists \mathbf{z}_{\tau}.\,
     \operatorname{Enc}(\tau,\varphi,\theta)
   \right) .
-  \label{eq:single-trace-obligation}
-\end{equation}
+\]
 
 We extend this single-trace formulation to a joint, multi-property
 incremental setting. At refinement round $k$, counterexamples from all
 currently violated properties are accumulated into a trace pool
-\begin{equation}
+\[
   \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}.
-  \label{eq:trace-pool}
-\end{equation}
+\]
 MPTA-Repair assembles a joint MaxSMT problem with the constraint system
 defined as
-\begin{equation}
+\[
 \begin{aligned}
   \Phi_k(\theta)
   =
@@ -149,25 +144,23 @@ defined as
   \bigwedge_{(\tau,\varphi)\in \mathit{Select}(\mathcal{T}_k)}
   \Psi_{\tau,\varphi}(\theta).
 \end{aligned}
-\label{eq:joint-constraint}
-\end{equation}
+\]
 Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and
 domain limits, such as $b'_s\ge 0$, and
 $\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
 obtained after relation-aware pruning. When an instantiated candidate
 model fails verification, the constraint system is updated
 incrementally. The framework expands the pool via
-\begin{equation}
+\[
   \mathcal{T}_{k+1}
   =
   \mathcal{T}_k
   \cup
   \mathit{NewTDT}(M(\theta_k),\Phi)
-  \label{eq:trace-pool-update}
-\end{equation}
+\]
 and updates the search-space block to exclude the failed assignment
 $\theta_k$ over the set of repairable bounds $S$:
-\begin{equation}
+\[
   \mathit{Block}_{k+1}(\theta)
   =
   \mathit{Block}_k(\theta)
@@ -175,15 +168,14 @@ $\theta_k$ over the set of repairable bounds $S$:
   \left(
     \bigvee_{s\in S} \delta_s \ne \delta_s^k
   \right),
-  \label{eq:blocking-constraint}
-\end{equation}
+\]
 where $\delta_s^k$ is the valuation assigned to variation variable
 $\delta_s$ in round $k$.
 
 The optimization objective is governed by a hierarchical set of soft
 constraints. MPTA-Repair implements a lexicographic objective to
 prioritize engineering preferences and domain heuristics:
-\begin{equation}
+\[
 \operatorname*{lex\,min}_{\theta}
 \left(
 \begin{aligned}
@@ -193,8 +185,7 @@ prioritize engineering preferences and domain heuristics:
   &-\sum_{s\in S} \mathit{benefit}_s \cdot \mathbf{1}\{\delta_s \ne 0\}
 \end{aligned}
 \right).
-\label{eq:lex-objective}
-\end{equation}
+\]
 Here, $\mathbf{1}\{\cdot\}$ denotes the indicator function, yielding 1
 when the inner condition holds and 0 otherwise. The primary and
 secondary objectives minimize the number and total magnitude of altered
