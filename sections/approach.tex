@@ -66,51 +66,143 @@ diagnostic evidence back into the subsequent refinement round.
 \subsection{Joint Trace Encoding and Optimization Objective}
 
 MPTA-Repair adopts the bound-variation paradigm for clock-bound repair
-\cite{koelbl2019clock}. Each modifiable numerical bound in a transition
-guard or location invariant is associated with a variation variable,
-ensuring that the repaired constraint retains the original clock
-reference and comparison operator while incorporating a shifted
-numerical value. Consequently, the repair space is restricted to
-clock-bound constants, whereas transition structures, location
-topologies, synchronization labels, reset sets, and discrete updates
-remain unaltered.
+\cite{koelbl2019clock}. Each modifiable numerical bound $b_s$ in a
+transition guard or location invariant is associated with a variation
+variable $\delta_s$. This ensures that the repaired constraint retains
+the original clock reference and comparison operator while incorporating
+a shifted value:
+\begin{equation}
+  b'_s = b_s + \delta_s .
+  \label{eq:bound-variation}
+\end{equation}
+The repair space is therefore strictly restricted to clock-bound
+constants, keeping transition structures and discrete updates unaltered.
 
-For each diagnostic trace, the framework constructs a TARTAR-style trace
-constraint system \cite{koelbl2019clock} encompassing standard
-conditions for clock initialization, time elapse, clock resets, guard
-satisfaction, and invariant satisfaction. By replacing original clock
-bounds with their varied counterparts, this formulation preserves the
-discrete trace skeleton within the solver while allowing its timing
-region to change. For a violated property and diagnostic trace, the
-resulting obligation serves two purposes. It ensures post-repair
-executability of the discrete trace skeleton to prevent trivial
-elimination of functional paths, and it requires that no feasible timing
-realization of this skeleton violates the target property. Local
-obligations therefore isolate violating timed behaviors without blocking
-the underlying functional execution.
+To formalize path constraints, MPTA-Repair adapts the trace-encoding
+formulation of TARTAR \cite{koelbl2019clock}. Given a timed diagnostic
+trace
+\begin{equation}
+  \tau =
+  \ell_0 \xrightarrow{d_0,e_0} \ell_1
+  \cdots
+  \xrightarrow{d_{n-1},e_{n-1}} \ell_n ,
+  \label{eq:tdt-trace}
+\end{equation}
+a violation trace for property $\varphi$ is encoded as a conjunction of
+linear arithmetic constraints:
+\begin{equation}
+\begin{aligned}
+  &\operatorname{Enc}(\tau,\varphi,\theta) =
+  \mathit{Init}(\nu_0) \\
+  &\quad{}\land
+  \bigwedge_{i=0}^{n-1}
+  \Bigl(
+    d_i \ge 0
+    \land \mathit{Inv}(\ell_i,\nu_i+d_i,\theta) \\
+  &\qquad{}\land
+    \mathit{Guard}(e_i,\nu_i+d_i,\theta)
+    \land \mathit{Reset}_i
+  \Bigr) \\
+  &\quad{}\land
+  \mathit{Bad}_{\varphi}(\ell_n,\nu_n) .
+\end{aligned}
+\label{eq:trace-encoding}
+\end{equation}
+Here, $\mathit{Init}(\nu_0)$ initializes the clock valuations, while
+$d_i$, $\mathit{Inv}$, $\mathit{Guard}$, and $\mathit{Reset}_i$ define
+the non-negative delays, location invariants, transition guards, and
+clock resets at step $i$, respectively, under the modified bounds
+$\theta$. The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$
+characterizes the violation state of $\varphi$ at the final location.
+To eliminate this violating behavior while preserving executability of
+the discrete path skeleton, the single-trace repair obligation
+eliminates the vector of trace-specific delay and valuation variables
+$\mathbf{z}_{\tau}$ via a quantifier elimination operator
+$\operatorname{QE}$:
+\begin{equation}
+  \Psi_{\tau,\varphi}(\theta)
+  =
+  \operatorname{QE}
+  \left(
+    \neg \exists \mathbf{z}_{\tau}.\,
+    \operatorname{Enc}(\tau,\varphi,\theta)
+  \right) .
+  \label{eq:single-trace-obligation}
+\end{equation}
 
-To guarantee physical validity during candidate generation, static
-consistency constraints are embedded directly into the formulation
-\cite{demoura2008z3}. Repaired bounds must lie within the supported
-numerical domain. Furthermore, when a lower bound and an upper bound
-jointly constrain the same clock within a local region, their repaired
-values must maintain a consistent timing interval.
+We extend this single-trace formulation to a joint, multi-property
+incremental setting. At refinement round $k$, counterexamples from all
+currently violated properties are accumulated into a trace pool
+\begin{equation}
+  \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}.
+  \label{eq:trace-pool}
+\end{equation}
+MPTA-Repair assembles a joint MaxSMT problem with the constraint system
+defined as
+\begin{equation}
+\begin{aligned}
+  \Phi_k(\theta)
+  =
+  &\mathit{Dom}(\theta)
+  \land \mathit{Block}_k(\theta) \\
+  &{}\land
+  \bigwedge_{(\tau,\varphi)\in \mathit{Select}(\mathcal{T}_k)}
+  \Psi_{\tau,\varphi}(\theta).
+\end{aligned}
+\label{eq:joint-constraint}
+\end{equation}
+Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and
+domain limits, such as $b'_s\ge 0$, and
+$\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
+obtained after relation-aware pruning. When an instantiated candidate
+model fails verification, the constraint system is updated
+incrementally. The framework expands the pool via
+\begin{equation}
+  \mathcal{T}_{k+1}
+  =
+  \mathcal{T}_k
+  \cup
+  \mathit{NewTDT}(M(\theta_k),\Phi)
+  \label{eq:trace-pool-update}
+\end{equation}
+and updates the search-space block to exclude the failed assignment
+$\theta_k$ over the set of repairable bounds $S$:
+\begin{equation}
+  \mathit{Block}_{k+1}(\theta)
+  =
+  \mathit{Block}_k(\theta)
+  \land
+  \left(
+    \bigvee_{s\in S} \delta_s \ne \delta_s^k
+  \right),
+  \label{eq:blocking-constraint}
+\end{equation}
+where $\delta_s^k$ is the valuation assigned to variation variable
+$\delta_s$ in round $k$.
 
-From the active pool of property-trace obligations, MPTA-Repair
-assembles a joint MaxSMT problem. The hard constraints include all
-encoded trace obligations, static consistency requirements,
-well-formedness conditions for repaired bounds, and blocking constraints
-derived from previously rejected candidates. The optimization objective
-is governed by a hierarchical set of simple soft constraints
-\cite{sebastiani2015optimization}. The primary objective minimizes the
-number of altered clock bounds by maximizing soft constraints of the
-form $v=0$. Among candidate solutions with the same number of
-modifications, a secondary objective minimizes the total magnitude of
-the variations. This optimization strategy aligns with the engineering
-goal of generating minimal, human-inspectable repairs and deliberately
-avoids speculative metrics such as semantic risk or causal relevance.
-Relation analysis is instead used externally to select or rank repair
-variables and obligations before and around the solving phase.
+The optimization objective is governed by a hierarchical set of soft
+constraints. MPTA-Repair implements a lexicographic objective to
+prioritize engineering preferences and domain heuristics:
+\begin{equation}
+\operatorname*{lex\,min}_{\theta}
+\left(
+\begin{aligned}
+  &\sum_{s\in S}\mathbf{1}\{\delta_s \ne 0\},\\
+  &\sum_{s\in S}|\delta_s|,\\
+  &\sum_{s\in S} \mathit{risk}_s \cdot \mathbf{1}\{\delta_s \ne 0\},\\
+  &-\sum_{s\in S} \mathit{benefit}_s \cdot \mathbf{1}\{\delta_s \ne 0\}
+\end{aligned}
+\right).
+\label{eq:lex-objective}
+\end{equation}
+Here, $\mathbf{1}\{\cdot\}$ denotes the indicator function, yielding 1
+when the inner condition holds and 0 otherwise. The primary and
+secondary objectives minimize the number and total magnitude of altered
+clock bounds to produce concise repairs. The third term incorporates a
+penalty coefficient $\mathit{risk}_s$ to discourage modifications prone
+to regression, while the final term uses a reward coefficient
+$\mathit{benefit}_s$ to prioritize repair sites that cover a broader set
+of violated traces.
 
 \subsection{Relation-Guided Search Optimization}
 
