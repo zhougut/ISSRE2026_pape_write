@@ -87,11 +87,11 @@ a timed diagnostic trace
   &{}\xrightarrow{d_{n-1},e_{n-1}} \ell_n
 \end{aligned}
 \end{equation}
-a violation trace for property $\varphi$ is encoded as a conjunction of
-linear arithmetic constraints:
+a trace path is encoded as a conjunction of linear arithmetic
+constraints:
 \begin{equation}
 \begin{aligned}
-  &\operatorname{Enc}(\tau,\varphi,\theta) =
+  &\operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}) =
   \mathit{Init}(\nu_0) \\
   &\quad{}\land
   \bigwedge_{i=0}^{n-1}
@@ -101,31 +101,48 @@ linear arithmetic constraints:
   &\qquad{}\land
     \mathit{Guard}(e_i,\nu_i+d_i,\theta)
     \land \mathit{Reset}_i
-  \Bigr) \\
-  &\quad{}\land
-  \mathit{Bad}_{\varphi}(\ell_n,\nu_n)
+  \Bigr)
 \end{aligned}
 \end{equation}
 Here, $\mathit{Init}(\nu_0)$ initializes the clock valuations, while
 $d_i$, $\mathit{Inv}$, $\mathit{Guard}$, and $\mathit{Reset}_i$ define
 the non-negative delays, location invariants, transition guards, and
 clock resets at step $i$, respectively, under the modified bounds
-$\theta$. The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$
-characterizes the violation state of $\varphi$ at the final location.
-To block this violating behavior while preserving executability of the
-discrete path skeleton, the single-trace repair obligation eliminates
-the vector of trace-specific delay and valuation variables
-$\mathbf{z}_{\tau}$ via the quantifier elimination operator
-$\operatorname{QE}$:
+$\theta$. The original violation encoding can then be viewed as the
+conjunction of path executability and the final property violation:
 \begin{equation}
-  \Psi_{\tau,\varphi}(\theta)
+  \operatorname{Enc}(\tau,\varphi,\theta)
   =
-  \operatorname{QE}
-  \left(
-    \neg \exists \mathbf{z}_{\tau}.\,
-    \operatorname{Enc}(\tau,\varphi,\theta)
-  \right)
+  \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau})
+  \land
+  \mathit{Bad}_{\varphi}(\ell_n,\nu_n)
 \end{equation}
+The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$ characterizes the
+violation state of $\varphi$ at the final location. To block this
+violating behavior while preserving executability of the discrete path
+skeleton, the single-trace repair obligation uses two copies of the
+trace variables:
+\begin{equation}
+\begin{aligned}
+  &\Psi_{\tau,\varphi}^{\mathrm{exec}}(\theta)
+  =
+  \operatorname{QE}\Bigl(
+  \exists \mathbf{z}_{\tau}^{+}.
+  \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}^{+}) \\
+  &\quad{}\land
+  \neg \exists \mathbf{z}_{\tau}^{-}.
+  \Bigl(
+    \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}^{-}) \\
+  &\qquad{}\land
+    \mathit{Bad}_{\varphi}(\ell_n^{-},\nu_n^{-})
+  \Bigr)
+  \Bigr)
+\end{aligned}
+\end{equation}
+The first part requires that the original discrete path skeleton still
+has at least one timed realization after repair. The second part
+requires that no assignment of delays and clock valuations can make that
+same path violate $\varphi$.
 
 We extend this single-trace formulation to a joint, multi-property
 incremental setting. At refinement round $k$, counterexamples from all
@@ -143,7 +160,7 @@ defined as
   \land \mathit{Block}_k(\theta) \\
   &{}\land
   \bigwedge_{(\tau,\varphi)\in \mathit{Select}(\mathcal{T}_k)}
-  \Psi_{\tau,\varphi}(\theta)
+  \Psi_{\tau,\varphi}^{\mathrm{exec}}(\theta)
 \end{aligned}
 \end{equation}
 Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and

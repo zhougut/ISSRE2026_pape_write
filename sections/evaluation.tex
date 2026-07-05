@@ -2,53 +2,45 @@
 \label{sec:evaluation}
 
 This section evaluates MPTA-Repair on both benchmark and industrial
-case studies. To ensure practical utility, our approach focuses
-exclusively on repairing numerical clock bounds within transition guards
-and location invariants, rather than altering the discrete transition
-logic. This parametric repair space is suitable for industrial systems,
-as it corrects clerical errors and optimizes timing resources without
-disrupting the underlying functional design. In addition, comparing
-MPTA-Repair with an iterative baseline extended from the TARTAR paradigm
-\cite{koelbl2020tartar} demonstrates that multi-property regression and
+case studies. The evaluation follows the clock-bound repair setting
+defined in Section~\ref{sec:approach}, where only numerical bounds in
+guards and invariants are repairable. Comparing MPTA-Repair with an
+iterative baseline extended from the TARTAR paradigm
+\cite{leue2019clock} demonstrates that multi-property regression and
 multi-counterexample analysis are essential to prevent secondary
-errors.
+property violations.
 
 \subsection{Evaluation Strategy and Datasets}
 
-To evaluate MPTA-Repair, we use two datasets with different
-characteristics, summarized in Table~\ref{tab:dataset-statistics}. The
-benchmark dataset includes nine standard models from UPPAAL and the
-XtaBenchmarkSuite, such as Elevator and FDDI, providing structural
-diversity for baseline comparison. The industrial dataset contains four
-closely coupled industrial case studies: Gear Control System for
-automotive transmission, SAE RoR for autonomous-driving decisions, Train
-Controller Alarm for railway emergency timing, and Train Gate Controller
-for shared-resource concurrency. Unlike the benchmarks, these
-industrial models contain dense timing constraints across multiple
-properties.
+We evaluate MPTA-Repair on two datasets, summarized in
+Table~\ref{tab:dataset-statistics}. The benchmark dataset includes nine
+standard models from UPPAAL \cite{behrmann2004tutorial} and the
+XtaBenchmarkSuite \cite{farkas2018benchmarks}, such as Elevator and
+FDDI. The industrial dataset contains five closely coupled industrial
+case studies: Gear Control System for automotive transmission
+\cite{lindahl1998gear}, SAE RoR for autonomous-driving decisions
+\cite{alves2021double}, Train Controller Alarm for railway emergency
+timing \cite{gonzalez2024uppaal}, Train Gate Controller for
+shared-resource concurrency \cite{alur1994theory}, and Pacemaker for
+medical device pacing \cite{jiang2010heart}. Compared with the
+benchmark models, these case studies involve more tightly coupled
+timing constraints across multiple properties.
 
 \input{tables/dataset-statistics}
 
-Since real-world faulty timed automata are rare, we synthesize faulty
-instances using mutation \cite{jia2011mutation}. Fault injection
-modifies only numerical clock-bound constants in guards and invariants,
-excluding structural changes. Simple mutants contain a single localized
-modification, while complex mutants combine two non-redundant
-single-point faults. We filter these combinations to ensure that both
-faults contribute to the property violation. All retained mutants are
-syntactically valid, violate at least one timing safety specification,
-and pass an initial admissibility check to ensure their original untimed
-functional behavior is preserved before repair.
+Since real-world timed-automata models with labeled clock-bound faults
+are difficult to obtain, we synthesize faulty instances using mutation
+\cite{jia2011mutation}. We retain only mutants that are syntactically
+valid, violate at least one timing safety property, and preserve the
+untimed behavior of the original model.
 
 We compare MPTA-Repair against an adapted iterative TARTAR-style
-baseline \cite{koelbl2020tartar}. For fairness, this baseline uses the
-same regression and admissibility validation steps as our method. The
-primary difference is that the baseline derives repairs from only one
-property or diagnostic trace at a time. Because it lacks the joint
-multi-counterexample relation analysis used in our framework, the
-baseline often gets stuck in local optima and overfits to isolated fault
-paths. This comparison highlights the importance of analyzing
-properties, counterexamples, and repair variables simultaneously.
+baseline \cite{leue2019clock}. Because the TARTAR method was originally
+designed for single-property repair and lacks joint multi-counterexample
+relation analysis, this comparison allows us to examine whether using a
+joint counterexample pool improves repair robustness over trace-local
+repair generation. The comparison is designed to evaluate the effect of
+jointly analyzing properties, counterexamples, and repair variables.
 
 \subsection{Experimental Results}
 
