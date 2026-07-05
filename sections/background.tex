@@ -98,11 +98,12 @@ for validation. A clock-bound repair constructs $M_{\mathit{rep}}$ by
 changing a small set of repairable bound occurrences. The repair is
 accepted only if the repaired bounds are well formed,
 \begin{equation}
-  M_{\mathit{rep}}\models \Phi
-  \quad\text{and}\quad
-  \mathrm{Untimed}_{\Sigma_f}(M_{\mathit{bad}})
+\begin{aligned}
+  &M_{\mathit{rep}}\models \Phi \quad\text{and}\\
+  &\mathrm{Untimed}_{\Sigma_f}(M_{\mathit{bad}})
   =
   \mathrm{Untimed}_{\Sigma_f}(M_{\mathit{rep}})
+\end{aligned}
 \end{equation}
 Here $\Sigma_f$ is the functional alphabet used for admissibility after
 excluding monitor-only, observer-only, and internal labels when
