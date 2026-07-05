@@ -7,37 +7,37 @@ chan req, ack, recover;
   </declaration>
 	<template>
 		<name>Driver</name>
-		<location id="id0" x="-102" y="0">
-			<name x="-122" y="-30">Idle</name>
-			<label kind="invariant" x="-178" y="17">wait &lt;= 20</label>
+		<location id="id0" x="-323" y="-25">
+			<name x="-343" y="-55">Idle</name>
+			<label kind="invariant" x="-399" y="-8">wait &lt;= 20</label>
 		</location>
-		<location id="id1" x="323" y="0">
-			<name x="340" y="-8">Waiting</name>
+		<location id="id1" x="-25" y="-25">
+			<name x="-8" y="-33">Waiting</name>
 		</location>
 		<init ref="id0"/>
 		<transition id="id2">
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="77" y="-164">wait &gt;= 5</label>
-			<label kind="synchronisation" x="102" y="-144">req!</label>
-			<label kind="assignment" x="89" y="-124">wait = 0</label>
-			<nail x="-8" y="-102"/>
-			<nail x="255" y="-102"/>
+			<label kind="guard" x="-204" y="-161">wait &gt;= 5</label>
+			<label kind="synchronisation" x="-187" y="-144">req!</label>
+			<label kind="assignment" x="-212" y="-127">wait = 0</label>
+			<nail x="-263" y="-102"/>
+			<nail x="-93" y="-102"/>
 		</transition>
 		<transition id="id3">
 			<source ref="id1"/>
 			<target ref="id0"/>
-			<label kind="synchronisation" x="93" y="-45">ack?</label>
-			<label kind="assignment" x="85" y="-25">wait = 0</label>
-			<nail x="119" y="0"/>
+			<label kind="synchronisation" x="-195" y="-68">ack?</label>
+			<label kind="assignment" x="-212" y="-51">wait = 0</label>
+			<nail x="-102" y="-25"/>
 		</transition>
 		<transition id="id4">
 			<source ref="id1"/>
 			<target ref="id0"/>
-			<label kind="synchronisation" x="76" y="51">recover?</label>
-			<label kind="assignment" x="88" y="71">wait = 0</label>
-			<nail x="255" y="93"/>
-			<nail x="-8" y="93"/>
+			<label kind="synchronisation" x="-212" y="8">recover?</label>
+			<label kind="assignment" x="-212" y="25">wait = 0</label>
+			<nail x="-93" y="51"/>
+			<nail x="-263" y="51"/>
 		</transition>
 	</template>
 	<template>
@@ -110,21 +110,21 @@ system Driver0, Controller;
 		<query>
 			<formula>A[] (Controller.Engage imply cut &gt;= 2)</formula>
 			<comment>P1: gear engagement must not start before at least two time units of torque cut.</comment>
-			<option key="--diagnostic" value="1"/>
-			<result outcome="failure" type="quality" timestamp="2026-07-05 00:28:59 +0800">
-				<option key="--diagnostic" value="1"/>
+			<option key="--diagnostic" value="-1"/>
+			<result outcome="failure" type="quality" timestamp="2026-07-05 12:30:51 +0800">
+				<option key="--diagnostic" value="-1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] not Controller.Late</formula>
 			<comment>P2: the shift request must be acknowledged within the response deadline.</comment>
-			<result outcome="success" type="quality" timestamp="2026-07-05 00:29:01 +0800">
+			<result outcome="success" type="quality" timestamp="2026-07-05 12:30:43 +0800">
 			</result>
 		</query>
 		<query>
 			<formula>A[] not deadlock</formula>
 			<comment>P3: the cyclic controller must not deadlock.</comment>
-			<result outcome="success" type="quality" timestamp="2026-07-05 00:29:03 +0800">
+			<result outcome="success" type="quality" timestamp="2026-07-05 12:30:45 +0800">
 			</result>
 		</query>
 	</queries>
