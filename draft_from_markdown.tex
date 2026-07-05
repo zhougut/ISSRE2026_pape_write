@@ -164,7 +164,7 @@ and uses MaxSMT solving to compute small modifications to guards and
 invariants {[}6{]}. TarTar extends this idea into an automatic repair
 analysis tool that suggests syntactic repairs and checks whether the
 repaired model preserves the untimed functional behavior of the original
-network timed automaton {[}7{]}. Other related directions include
+network timed automaton {[}6{]}. Other related directions include
 parameter synthesis for parametric timed automata {[}8{]}, clock-guard
 repair through abstraction and testing {[}10{]}, robustness analysis for
 uncertain timing constants {[}11{]}, and SAT/SMT-based model or program
@@ -718,7 +718,7 @@ be considered successful.
 
 \subsubsection{B. Baseline}\label{b.-baseline}
 
-We compare MPTA-Repair with an iterative TARTAR-style baseline {[}7{]}.
+We compare MPTA-Repair with an iterative TARTAR-style baseline {[}6{]}.
 The baseline is intentionally stronger than a one-shot call to a
 single-trace repair tool. It verifies the current model, selects a
 violated property, collects a diagnostic trace, invokes a
@@ -1043,7 +1043,7 @@ repair, and structural repair is left for future work.
 \subsubsection{B. Related Work}\label{b.-related-work}
 
 The closest related work is clock-bound repair for timed systems and
-TarTar {[}7{]}. Clock-bound repair encodes timed diagnostic traces into
+TarTar {[}6{]}. Clock-bound repair encodes timed diagnostic traces into
 linear real arithmetic and uses MaxSMT solving to compute small
 modifications to guard and invariant bounds {[}6{]}. TarTar extends this
 line into a repair analysis tool and introduces an admissibility check
@@ -1135,9 +1135,6 @@ pp.~208--219.
 
 {[}6{]} M. Koelbl, S. Leue, and T. Wies, ``Clock Bound Repair for Timed
 Systems,'' manuscript, 2019.
-
-{[}7{]} M. Koelbl, S. Leue, and T. Wies, ``TarTar: A Timed Automata
-Repair Tool,'' arXiv:2002.02760, 2020.
 
 {[}8{]} R. Alur, T. A. Henzinger, and M. Y. Vardi, ``Parametric
 real-time reasoning,'' in \emph{Proc. ACM Symposium on Theory of

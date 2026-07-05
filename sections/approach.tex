@@ -66,7 +66,7 @@ diagnostic evidence back into the subsequent refinement round.
 \subsection{Joint Trace Encoding and Optimization Objective}
 
 MPTA-Repair follows the clock-bound variation strategy used in TARTAR
-\cite{leue2019clock}. Each modifiable numerical bound $b_s$ in a
+\cite{kolbl2019clock}. Each modifiable numerical bound $b_s$ in a
 transition guard or location invariant is associated with a variation
 variable $\delta_s$. This ensures that the repaired constraint retains
 the original clock reference and comparison operator while incorporating
@@ -78,7 +78,7 @@ The repair space is therefore strictly restricted to clock-bound
 constants, keeping transition structures and discrete updates unaltered.
 
 MPTA-Repair builds on the trace-encoding formulation of TARTAR and
-extends it to the multi-property setting \cite{leue2019clock}. Given
+extends it to the multi-property setting \cite{kolbl2019clock}. Given
 a timed diagnostic trace
 \begin{equation}
 \begin{aligned}
@@ -249,7 +249,7 @@ properties. Redundant traces are eliminated via exact-duplicate removal.
 The remaining TDTs are annotated with structural features, including
 traversed transitions, visited locations, active clocks, guard or
 invariant bounds, and violated properties from which they are generated
-\cite{leue2019clock}. Traces sharing identical discrete transition
+\cite{kolbl2019clock}. Traces sharing identical discrete transition
 sequences or overlapping clock zones are grouped together to expose the
 common structural bottlenecks of the model. A trace constraint is
 omitted from the active encoding only when it is an exact duplicate or
@@ -282,7 +282,7 @@ round.
 
 Candidates that pass full-property regression verification are further
 evaluated against an admissibility check to maintain functional
-equivalence \cite{leue2019clock}. This step ensures that clock-bound
+equivalence \cite{kolbl2019clock}. This step ensures that clock-bound
 modifications do not satisfy properties by disabling original
 functional behaviors. Rather than enforcing timed-language equivalence,
 which would conflict with the goal of eliminating violating timed paths,

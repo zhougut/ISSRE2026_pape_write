@@ -56,10 +56,10 @@ realization reaches a state that violates $\varphi$.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.39\columnwidth]{figures/gear_shift_nta_Driver.png}\\[-0.35em]
-  \footnotesize (a) Driver\\[-0.1em]
-  \includegraphics[width=0.80\columnwidth]{figures/gear_shift_nta_GearController.png}\\[-0.55em]
-  \footnotesize (b) GearController
+  \includegraphics[width=0.58\columnwidth]{figures/gear_shift_nta_Driver-cropped.pdf}\\[-0.35em]
+  {\footnotesize (a) Driver}\\[0.2em]
+  \includegraphics[width=0.98\columnwidth]{figures/gear_shift_nta_GearController-cropped.pdf}\\[-0.55em]
+  {\footnotesize (b) GearController}
   \caption{Simplified gear-shift example.}
   \label{fig:gear-shift-nta}
   \vspace{-0.5em}
@@ -85,7 +85,7 @@ determine which numerical bound is faulty or whether the responsible
 occurrence is a guard or an invariant. TDT-based clock-bound repair
 encodes trace feasibility and property violation as linear arithmetic
 constraints over delays, valuations, and bound variations
-~\cite{leue2019clock}. MaxSMT solving then prefers small repairs,
+~\cite{kolbl2019clock}. MaxSMT solving then prefers small repairs,
 typically by minimizing the number and magnitude of nonzero variations
 ~\cite{sebastiani2015optimization}. In the single-trace setting, the
 resulting candidate blocks the considered violating realization, but it
@@ -108,7 +108,7 @@ accepted only if the repaired bounds are well formed,
 Here $\Sigma_f$ is the functional alphabet used for admissibility after
 excluding monitor-only, observer-only, and internal labels when
 appropriate. This TARTAR-style criterion prevents repairs that satisfy
-properties merely by disabling required actions~\cite{leue2019clock}.
+properties merely by disabling required actions~\cite{kolbl2019clock}.
 
 The objective in Definition~3 explains why MPTA-Repair accumulates
 property-trace obligations across refinement rounds. A bound edit that
