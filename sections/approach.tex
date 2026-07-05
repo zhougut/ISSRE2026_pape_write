@@ -65,7 +65,7 @@ diagnostic evidence back into the subsequent refinement round.
 
 \subsection{Joint Trace Encoding and Optimization Objective}
 
-MPTA-Repair adopts the bound-variation paradigm for clock-bound repair
+MPTA-Repair follows the clock-bound variation strategy used in TARTAR
 \cite{koelbl2019clock}. Each modifiable numerical bound $b_s$ in a
 transition guard or location invariant is associated with a variation
 variable $\delta_s$. This ensures that the repaired constraint retains
@@ -77,9 +77,9 @@ a shifted value:
 The repair space is therefore strictly restricted to clock-bound
 constants, keeping transition structures and discrete updates unaltered.
 
-To formalize path constraints, MPTA-Repair adapts the trace-encoding
-formulation of TARTAR \cite{koelbl2019clock}. Given a timed diagnostic
-trace
+MPTA-Repair builds on the trace-encoding formulation of TARTAR and
+extends it to the multi-property setting \cite{koelbl2019clock}. Given
+a timed diagnostic trace
 \begin{equation}
 \begin{aligned}
   \tau ={}&
@@ -112,10 +112,10 @@ the non-negative delays, location invariants, transition guards, and
 clock resets at step $i$, respectively, under the modified bounds
 $\theta$. The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$
 characterizes the violation state of $\varphi$ at the final location.
-To eliminate this violating behavior while preserving executability of
-the discrete path skeleton, the single-trace repair obligation
-eliminates the vector of trace-specific delay and valuation variables
-$\mathbf{z}_{\tau}$ via a quantifier elimination operator
+To block this violating behavior while preserving executability of the
+discrete path skeleton, the single-trace repair obligation eliminates
+the vector of trace-specific delay and valuation variables
+$\mathbf{z}_{\tau}$ via the quantifier elimination operator
 $\operatorname{QE}$:
 \begin{equation}
   \Psi_{\tau,\varphi}(\theta)
@@ -149,7 +149,7 @@ defined as
 Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and
 domain limits, such as $b'_s\ge 0$, and
 $\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
-obtained after relation-aware pruning. When an instantiated candidate
+obtained after relation-aware filtering. When an instantiated candidate
 model fails verification, the constraint system is updated
 incrementally. The framework expands the pool via
 \begin{equation}
@@ -174,8 +174,9 @@ where $\delta_s^k$ is the valuation assigned to variation variable
 $\delta_s$ in round $k$.
 
 The optimization objective is governed by a hierarchical set of soft
-constraints. MPTA-Repair implements a lexicographic objective to
-prioritize engineering preferences and domain heuristics:
+constraints. MPTA-Repair uses a lexicographic objective that first
+favors small repairs and then incorporates risk- and coverage-based
+priorities:
 \begin{equation}
 \operatorname*{lex\,min}_{\theta}
 \left(

@@ -1,19 +1,23 @@
 \begin{table}[t]
-\caption{Repair success rates across benchmark and industrial datasets.}
+\caption{Repair results across benchmark and industrial datasets.}
 \label{tab:overall-results}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llc@{}}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llcccc@{}}
 \toprule
-Dataset & Method & Success rate \\
+Dataset & Method &
+\begin{tabular}[c]{@{}c@{}}Mutated\\models\end{tabular} &
+Repaired &
+\begin{tabular}[c]{@{}c@{}}Success\\rate\end{tabular} &
+\begin{tabular}[c]{@{}c@{}}Avg.\\time\end{tabular} \\
 \midrule
 \raisebox{-0.5\normalbaselineskip}{Benchmark}
-  & Iterative baseline & 72\% \\
-  & MPTA-Repair & 93\% \\
+  & Iterative baseline & 54 & 39 & 72\% & 60.61s \\
+  & MPTA-Repair & 54 & 50 & 93\% & 15.46s \\
 \raisebox{-0.5\normalbaselineskip}{Industrial}
-  & Iterative baseline & 20\% \\
-  & MPTA-Repair & 76\% \\
+  & Iterative baseline & 105 & 21 & 20\% & 35.59s \\
+  & MPTA-Repair & 105 & 80 & 76\% & 85.28s \\
 \bottomrule
 \end{tabular*}
 \end{table}
