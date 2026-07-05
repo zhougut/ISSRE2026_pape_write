@@ -251,32 +251,30 @@ system.
 
 \subsection{Validation, Admissibility, and Refinement}
 
-Candidate validation serves as the primary correctness guarantee in
-MPTA-Repair \cite{clarke1999model}. After a candidate edit set is
-generated, the repaired model is verified against the entire property
-set $\Phi$. If a candidate resolves the triggering violation but
-introduces a failure in another property, it is rejected, indicating
-that the current property-trace pool is under-constrained. MPTA-Repair
-then extracts the newly observed diagnostic trace and appends it to the
-pool, steering the subsequent refinement round.
+In MPTA-Repair, candidate validation determines whether a generated edit
+set can be accepted as a repair \cite{clarke1999model}. After a
+candidate edit set is generated, the repaired model is verified against
+the entire property set $\Phi$. If a candidate resolves the observed
+violation but induces new violations against the specification, it is
+rejected, indicating that the current property-trace pool is
+insufficient. MPTA-Repair then extracts the newly observed diagnostic
+trace and appends it to the pool, guiding the subsequent refinement
+round.
 
-Candidates that pass full-property regression are further evaluated
-against a TARTAR-style admissibility criterion based on functional
+Candidates that pass full-property regression verification are further
+evaluated against an admissibility check to maintain functional
 equivalence \cite{koelbl2019clock}. This step ensures that clock-bound
-modifications do not satisfy safety properties by disabling intended
-system behaviors. Rather than enforcing timed-language equivalence,
+modifications do not satisfy properties by disabling original
+functional behaviors. Rather than enforcing timed-language equivalence,
 which would conflict with the goal of eliminating violating timed paths,
-admissibility is checked by constructing untimed automata from both the
+admissibility is verified by constructing untimed automata from both the
 original and repaired models and comparing their accepted untimed
 languages \cite{hopcroft2001automata}. A candidate is rejected if it
 adds or removes discrete functional paths, ensuring that only timing
-characteristics are changed.
+characteristics are modified.
 
-The refinement loop therefore establishes a closed-loop mechanism that
-pairs local candidate generation with global validation. Local MaxSMT
-formulations propose candidate assignments, full-property regression
-ensures complete specification compliance, and functional-equivalence
-checking preserves the underlying discrete structure. Blocking
-constraints prevent recurrence of failed assignments, ultimately
-yielding a repair that satisfies the multi-property specification while
-preserving the intended untimed model semantics.
+The refinement loop therefore combines local candidate generation with
+global validation. Local MaxSMT formulations propose candidate
+assignments, full-property regression ensures complete specification
+compliance, and functional-equivalence checking maintains the original
+functional equivalence.
