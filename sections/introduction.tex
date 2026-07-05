@@ -6,7 +6,7 @@ systems whose correctness depends on both discrete behavior and
 quantitative timing constraints~\cite{alur1994theory,bengtsson2004timed}.
 They appear in railway control, communication protocols, medical
 cyber-physical systems, and aerospace scheduling
-~\cite{basile2021unisig,jiang2012pacemaker,david2010herschel}. In these
+~\cite{basile2021unisig,lonn1997tdma,jiang2012pacemaker,david2010herschel}. In these
 systems, an alarm, message, pulse, actuation, or resource release may be
 functionally present but still incorrect if it occurs too early, too
 late, or for an invalid duration.
@@ -15,9 +15,9 @@ Practical timed-automata models are validated against sets of properties
 rather than isolated assertions. These properties jointly capture safety,
 bounded response, timeout handling, deadline satisfaction, alarm
 duration, and deadlock freedom~\cite{vogel2022patterns}. When a property
-is violated, model checkers such as UPPAAL and Kronos can produce a
+is violated, model checkers such as UPPAAL, Kronos, or opaal can produce a
 timed diagnostic trace (TDT), i.e., a timed counterexample that reaches a
-violating state~\cite{larsen1997uppaal,daws1996kronos}. A TDT is useful
+violating state~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. A TDT is useful
 failure evidence, but it does not identify which numerical bound is
 wrong, whether the fault lies in a guard or an invariant, or how the
 bound should be changed.
@@ -35,14 +35,14 @@ regression and behavior-preservation checks.
 Existing repair techniques provide an important foundation. Clock-bound
 repair encodes a TDT as linear real arithmetic, introduces variation
 variables for numerical clock bounds, and uses MaxSMT solving to compute
-small changes to guards and invariants~\cite{koelbl2019clock}. TARTAR
+small changes to guards and invariants~\cite{kolbl2019clock}. TARTAR
 extends this idea with syntactic repair generation and an admissibility
-check based on untimed functional equivalence~\cite{koelbl2019clock}.
+check based on untimed functional equivalence~\cite{kolbl2019clock}.
 Related work also studies parametric timed automata, clock-guard repair,
 robustness analysis, and SMT-based repair
 ~\cite{alur1993parametric,andre2019repairing,bendik2021robustness,jose2011bugassist}.
 However, TDT-based workflows are still commonly driven by one violated
-property or one diagnostic trace at a time.
+property or one diagnostic trace at a time~\cite{kolbl2019clock}.
 
 This paper presents \textbf{MPTA-Repair}, an automated framework for
 multi-property clock-bound repair of timed automata. Given a faulty
