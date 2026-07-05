@@ -72,7 +72,7 @@ variable $\delta_s$. This ensures that the repaired constraint retains
 the original clock reference and comparison operator while incorporating
 a shifted value:
 \begin{equation}
-  b'_s = b_s + \delta_s .
+  b'_s = b_s + \delta_s
 \end{equation}
 The repair space is therefore strictly restricted to clock-bound
 constants, keeping transition structures and discrete updates unaltered.
@@ -81,10 +81,11 @@ To formalize path constraints, MPTA-Repair adapts the trace-encoding
 formulation of TARTAR \cite{koelbl2019clock}. Given a timed diagnostic
 trace
 \begin{equation}
-  \tau =
-  \ell_0 \xrightarrow{d_0,e_0} \ell_1
-  \cdots
-  \xrightarrow{d_{n-1},e_{n-1}} \ell_n ,
+\begin{aligned}
+  \tau ={}&
+  \ell_0 \xrightarrow{d_0,e_0} \ell_1 \cdots \\
+  &{}\xrightarrow{d_{n-1},e_{n-1}} \ell_n
+\end{aligned}
 \end{equation}
 a violation trace for property $\varphi$ is encoded as a conjunction of
 linear arithmetic constraints:
@@ -102,7 +103,7 @@ linear arithmetic constraints:
     \land \mathit{Reset}_i
   \Bigr) \\
   &\quad{}\land
-  \mathit{Bad}_{\varphi}(\ell_n,\nu_n) .
+  \mathit{Bad}_{\varphi}(\ell_n,\nu_n)
 \end{aligned}
 \end{equation}
 Here, $\mathit{Init}(\nu_0)$ initializes the clock valuations, while
@@ -123,14 +124,14 @@ $\operatorname{QE}$:
   \left(
     \neg \exists \mathbf{z}_{\tau}.\,
     \operatorname{Enc}(\tau,\varphi,\theta)
-  \right) .
+  \right)
 \end{equation}
 
 We extend this single-trace formulation to a joint, multi-property
 incremental setting. At refinement round $k$, counterexamples from all
 currently violated properties are accumulated into a trace pool
 \begin{equation}
-  \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}.
+  \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}
 \end{equation}
 MPTA-Repair assembles a joint MaxSMT problem with the constraint system
 defined as
@@ -142,7 +143,7 @@ defined as
   \land \mathit{Block}_k(\theta) \\
   &{}\land
   \bigwedge_{(\tau,\varphi)\in \mathit{Select}(\mathcal{T}_k)}
-  \Psi_{\tau,\varphi}(\theta).
+  \Psi_{\tau,\varphi}(\theta)
 \end{aligned}
 \end{equation}
 Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and
@@ -167,7 +168,7 @@ $\theta_k$ over the set of repairable bounds $S$:
   \land
   \left(
     \bigvee_{s\in S} \delta_s \ne \delta_s^k
-  \right),
+  \right)
 \end{equation}
 where $\delta_s^k$ is the valuation assigned to variation variable
 $\delta_s$ in round $k$.
@@ -184,7 +185,7 @@ prioritize engineering preferences and domain heuristics:
   &\sum_{s\in S} \mathit{risk}_s \cdot \mathbf{1}\{\delta_s \ne 0\},\\
   &-\sum_{s\in S} \mathit{benefit}_s \cdot \mathbf{1}\{\delta_s \ne 0\}
 \end{aligned}
-\right).
+\right)
 \end{equation}
 Here, $\mathbf{1}\{\cdot\}$ denotes the indicator function, yielding 1
 when the inner condition holds and 0 otherwise. The primary and
