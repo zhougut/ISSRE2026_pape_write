@@ -3,62 +3,43 @@
 
 \subsection{Overview}
 
-MPTA-Repair is a counterexample-guided framework designed for the
-multi-property clock-bound repair of timed automata models. The
-framework takes as input a faulty model $M$, a property set
-$\Phi=\{\varphi_1,\ldots,\varphi_m\}$, and configuration parameters such
-as a global timeout. Instead of requiring users to manually specify
-repair variables, MPTA-Repair extracts repairable bounds from numerical
-clock constraints in transition guards and location invariants. The
-output is either a repaired model $M'$ along with a set of clock-bound
-edits, or a failure report indicating that no admissible full-property
-repair was identified within the given time budget.
+MPTA-Repair takes a timed-automata model $M$ and a property set
+$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ as input. Instead of requiring
+manual variable specification, the framework extracts repairable bounds
+from numerical clock constraints in transition guards and location
+invariants. The final output is either a repaired model $M'$
+accompanied by concrete clock-bound edits, or a failure report if no
+valid full-property repair can be synthesized within the resource
+budget.
 
-MPTA-Repair is based on two observations. First, while candidate repair
-generation can be driven by local diagnostic traces, candidate
-validation must remain global. A candidate that repairs one violated
-property might induce failures in others, because shared clocks,
-locations, transitions, or synchronizations often participate in
-multiple timing requirements. Consequently, MPTA-Repair iteratively
-collects counterexamples from subsequent violations to progressively
-constrain the space of admissible repair candidates. This refinement
-loop continues until a candidate satisfies the entire property set and
-passes admissibility verification, or the given time budget is
-exhausted.
+The framework operates on a local-generation and global-validation
+principle. While individual timed diagnostic traces (TDTs) drive
+candidate generation, validation remains global to ensure that fixing
+one violation does not introduce regressions elsewhere. To leverage the
+interdependence where multiple violations share identical timing
+structures, MPTA-Repair maintains a joint pool of property-trace
+obligations. This joint structure enables the framework to exploit
+relations among properties, counterexamples, and repairable bounds to
+optimize the search space and guide the MaxSMT solver toward minimal
+parameter assignments.
 
-Second, different properties and diagnostic traces are often related
-through shared repairable bounds. A single erroneous timing bound can
-contribute to multiple violations, and distinct traces may correspond to
-different executions of the same underlying fault. To leverage this
-interdependence, MPTA-Repair maintains a joint pool of property-trace
-obligations and searches for a clock-bound assignment that
-simultaneously satisfies all encoded constraints while minimizing the
-total modification cost. Relational analysis across properties, traces,
-and repairable bounds serves to minimize redundant computations and
-guide the search space exploration, though the generated candidates must
-ultimately pass verification and admissibility checks.
-
-In operation, MPTA-Repair initially verifies the model against the
-property set and collects timed diagnostic traces (TDTs) for any
-violations. It then extracts repairable clock bounds and constructs a
-joint MaxSMT repair problem from the active property-trace pool. The
-computed assignment is instantiated into a candidate model, which
-undergoes validation against the complete property set and a
-functional-equivalence admissibility criterion. If validation fails,
-newly identified diagnostic traces are integrated into the pool, and the
-refinement loop repeats.
-
-Figure~\ref{fig:mpta-repair-workflow} illustrates the overall workflow.
-The initial verification stage populates the property-trace pool.
-Subsequently, the relation-guided optimization phase structures the
-dependencies among properties, counterexamples, and repairable bounds.
-Finally, the MaxSMT solving stage generates candidate edits. The
-validation component either accepts an admissible repair or feeds new
-diagnostic evidence back into the subsequent refinement round.
+Operationally, each refinement round begins by verifying $M$ against
+$\Phi$ to collect TDTs for any violations. If violations are detected,
+the framework identifies active repairable bounds and constructs a joint
+MaxSMT problem from the active obligation pool. The synthesized
+parameter assignment is instantiated into a candidate model, which
+undergoes global validation via full-property regression and an untimed
+functional-equivalence admissibility check. A rejected candidate
+contributes newly exposed diagnostic traces back into the pool to
+further constrain subsequent rounds, whereas a candidate passing both
+checks is returned as the valid repair $M'$.
+Figure~\ref{fig:mpta-repair-workflow} summarizes this
+counterexample-guided refinement loop from verification and
+relation-guided MaxSMT solving to global validation.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.98\textwidth]{MPTA_Repair_overview.pdf}
+  \includegraphics[width=0.86\textwidth]{MPTA_Repair_overview.pdf}
   \caption{Overview of the MPTA-Repair workflow.}
   \label{fig:mpta-repair-workflow}
 \end{figure*}
