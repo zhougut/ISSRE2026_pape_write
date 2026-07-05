@@ -1,62 +1,17 @@
-\section{Implementation and Experimental Evaluation}
+\section{Experimental Evaluation}
 \label{sec:evaluation}
 
-This section presents the implementation of MPTA-Repair and evaluates
-its performance on both benchmark and industrial case studies. To
-ensure practical utility, our approach focuses exclusively on repairing
-numerical clock bounds within transition guards and location invariants,
-rather than altering the discrete transition logic. This parametric
-repair space is suitable for industrial systems, as it corrects
-clerical errors and optimizes timing resources without disrupting the
-underlying functional design. In addition, comparing MPTA-Repair with
-an iterative baseline extended from the TARTAR paradigm
+This section evaluates MPTA-Repair on both benchmark and industrial
+case studies. To ensure practical utility, our approach focuses
+exclusively on repairing numerical clock bounds within transition guards
+and location invariants, rather than altering the discrete transition
+logic. This parametric repair space is suitable for industrial systems,
+as it corrects clerical errors and optimizes timing resources without
+disrupting the underlying functional design. In addition, comparing
+MPTA-Repair with an iterative baseline extended from the TARTAR paradigm
 \cite{koelbl2020tartar} demonstrates that multi-property regression and
 multi-counterexample analysis are essential to prevent secondary
 errors.
-
-\subsection{Prototype Implementation}
-
-We implemented MPTA-Repair as an incremental pipeline that takes a
-faulty model and produces a validated repaired model or a failure
-report. The tool integrates a timed-automata parser, a verification
-interface using UPPAAL \cite{larsen1997uppaal}, a Z3-powered MaxSMT
-backend \cite{demoura2008z3}, and an admissibility checker. Modeled
-after a control-loop architecture, the pipeline executes the following
-steps.
-
-\textbf{Input and initial verification.} The pipeline reads the faulty
-model, properties, and configurations. The verification engine extracts
-editable clock-bound variables from transition guards and location
-invariants, generating an initial trace pool of timed diagnostic traces
-for all violated properties.
-
-\textbf{Relation-guided search and optimization.} This module maps the
-diagnostic traces to the extracted variables. A relation-analysis
-mechanism prunes, groups, and ranks these variables by identifying
-logical dependencies among properties, counterexamples, and repair
-locations. This mapping structures the repair constraints and reduces
-the search space.
-
-\textbf{MaxSMT solving and candidate generation.} The optimized data is
-passed to the MaxSMT solver, which constructs a constraint system. This
-system includes hard constraints for trace feasibility, well-formedness,
-and blocking criteria, along with soft constraints designed to minimize
-modifications. Once a solution is found, a model writer generates the
-candidate model.
-
-\textbf{Full validation and refinement.} The candidate model must pass
-two validation steps to ensure timing correctness and behavioral
-equivalence. First, full-property regression verification through UPPAAL
-ensures that no new violations are introduced. Second, an acceptability
-check evaluates untimed functional equivalence using a TARTAR-style
-criterion \cite{koelbl2019clock}, rejecting candidates that alter the
-functional, untimed behavior.
-
-\textbf{Iteration.} If a candidate fails either validation step, the
-control loop feeds the newly discovered diagnostic traces back into the
-trace pool. This initiates a counterexample-guided refinement loop,
-updating the solver constraints until a globally valid repair is found
-or the search budget is exhausted.
 
 \subsection{Evaluation Strategy and Datasets}
 
