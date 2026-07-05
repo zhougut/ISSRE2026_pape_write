@@ -197,57 +197,39 @@ of violated traces.
 
 \subsection{Relation-Guided Search Optimization}
 
-During successive refinement rounds, the accumulation of violated
-properties, diagnostic traces, and editable clock bounds significantly
-expands the search space \cite{clarke2000cegar}. Unstructured encoding
-of all property-trace constraints and repairable bounds increases the
-complexity of the MaxSMT problem and can lead to repeatedly solving
-similar constraints. To mitigate this overhead, MPTA-Repair introduces
-relation-guided optimization to filter, group, and rank repairable
-variables and constraints. Crucially, these relation-based heuristics
-serve strictly as search optimizations; validity and admissibility of
-generated candidates are still guaranteed through full-property
-regression verification and admissibility checking.
+During refinement, accumulating violated properties, TDTs, and editable
+bounds expands the MaxSMT search space \cite{clarke2000cegar}. To
+reduce redundant constraints, MPTA-Repair uses relation-guided
+optimization to filter, group, and rank constraints and repair
+variables. These heuristics only guide the search; correctness is still
+guaranteed through full-property regression verification and
+admissibility checking.
 
-At the property layer, MPTA-Repair operates on timed safety properties
-normalized into an $\mathtt{A}[]$ fragment over location predicates and
-clock or integer constraints \cite{vogel2022patterns}. Relational
-analysis employs conservative syntactic and structural rules to evaluate
-equivalence and dominance. Two properties are defined as equivalent if
-and only if their normalized representations are syntactically
-identical. Dominance is established only when clear logical subsumption
-holds, for example when two upper-bound properties share identical
-structures but differ in their numerical thresholds and the tighter
-bound implies the weaker one. For instance,
-$\mathtt{A}[]\, x \le 5$ subsumes $\mathtt{A}[]\, x \le 10$ under the
-same structural context. Consequently, MPTA-Repair can retain only the
-stronger properties for the subsequent solving phase to optimize
-efficiency.
+At the property layer, timed safety properties are normalized into an
+$\mathtt{A}[]$ fragment over location predicates and clock or integer
+constraints \cite{vogel2022patterns}. Equivalence is detected by the
+syntactic identity of normalized forms, while dominance is evaluated
+under logical subsumption, e.g., $\mathtt{A}[]\, x \le 5$ subsumes
+$\mathtt{A}[]\, x \le 10$ within the same structural context.
+MPTA-Repair then retains only the stronger properties for solving to
+optimize efficiency.
 
-At the counterexample layer, the framework maintains a managed pool of
-timed diagnostic traces (TDTs) indexed by their corresponding violated
-properties. Redundant traces are eliminated via exact-duplicate removal.
-The remaining TDTs are annotated with structural features, including
-traversed transitions, visited locations, active clocks, guard or
-invariant bounds, and violated properties from which they are generated
-\cite{kolbl2019clock}. Traces sharing identical discrete transition
-sequences or overlapping clock zones are grouped together to expose the
-common structural bottlenecks of the model. A trace constraint is
-omitted from the active encoding only when it is an exact duplicate or
-when a sound subsumption check shows that its local constraint pattern
-is already covered by an encoded trace constraint.
+At the counterexample layer, MPTA-Repair maintains a TDT pool indexed by
+violated properties. Exact duplicates are removed, and the remaining
+traces are annotated with traversed transitions, visited locations,
+active clocks, and guard or invariant bounds \cite{kolbl2019clock}.
+Traces with identical discrete transition sequences or overlapping
+clock zones are grouped to reveal common bottlenecks. A trace constraint
+is omitted from the active encoding only when it is an exact duplicate
+or soundly subsumed by an encoded trace constraint.
 
-At the repair-bound layer, MPTA-Repair establishes a mapping between
-each active property-trace constraint and the clock bounds that occur in
-or affect the encoded trace constraints. This mapping restricts the set
-of active decision variables in the MaxSMT problem to those directly
-relevant to the current counterexample pool, while providing a heuristic
-ordering for candidate generation. Rather than imposing rigid
-structural constraints or hard-coding specific modifications, these
-relational scores serve as an adaptive guidance mechanism. They improve
-repair efficiency by ranking the repair variables, prioritizing those
-whose modifications are more likely to satisfy the joint constraint
-system.
+At the repair-bound layer, MPTA-Repair maps each active property-trace
+constraint to the clock bounds occurring in or affecting its encoding.
+This mapping restricts active MaxSMT decision variables to bounds
+relevant to the current counterexample pool and ranks them for candidate
+generation. Bounds with higher relational scores are prioritized
+because their modifications are more likely to satisfy the joint
+constraint system.
 
 \subsection{Validation, Admissibility, and Refinement}
 
