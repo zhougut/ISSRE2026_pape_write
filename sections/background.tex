@@ -5,9 +5,9 @@
 
 \noindent\textbf{Definition 1.}
 A timed automaton is a tuple
-\[
+\begin{equation}
   T=(L,\ell_0,C,\Sigma,\Theta,I),
-\]
+\end{equation}
 where $L$ is a finite set of locations, $\ell_0$ is the initial location,
 $C$ is a finite set of clocks, $\Sigma$ is a set of action labels,
 $\Theta$ is a finite set of transitions, and $I$ maps each location to a
@@ -97,13 +97,13 @@ $\Phi=\{\varphi_1,\ldots,\varphi_m\}$ be the complete property set used
 for validation. A clock-bound repair constructs $M_{\mathit{rep}}$ by
 changing a small set of repairable bound occurrences. The repair is
 accepted only if the repaired bounds are well formed,
-\[
+\begin{equation}
   M_{\mathit{rep}}\models \Phi
   \quad\text{and}\quad
   \mathrm{Untimed}_{\Sigma_f}(M_{\mathit{bad}})
   =
   \mathrm{Untimed}_{\Sigma_f}(M_{\mathit{rep}}).
-\]
+\end{equation}
 Here $\Sigma_f$ is the functional alphabet used for admissibility after
 excluding monitor-only, observer-only, and internal labels when
 appropriate. This TARTAR-style criterion prevents repairs that satisfy
