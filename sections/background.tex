@@ -1,10 +1,10 @@
 ﻿\section{Preliminaries}
 \label{sec:background}
 
-\subsection{Timed Automata and Repair Scope}
+\subsection{Networks of Timed Automata and Repair Scope}
 
 \noindent\textbf{Definition 1.}
-A timed automaton is a tuple
+A timed automaton (TA) is a tuple
 \begin{equation}
   T=(L,\ell_0,C,\Sigma,\Theta,I)
 \end{equation}
@@ -16,13 +16,13 @@ where $x\in C$, $\sim\in\{<,\leq,=,\geq,>\}$, and
 $b\in\mathbb{R}_{\geq 0}$. A transition
 $\theta=(\ell,g,a,R,\ell')$ moves from $\ell$ to $\ell'$ when guard $g$
 is satisfied, emits action $a$, and resets clocks in $R\subseteq C$.
-A network timed automaton is a parallel composition
+An NTA is a parallel composition
 $\mathcal{N}=T_1\parallel\cdots\parallel T_k$ with the synchronization
 semantics of the target modeling language, such as UPPAAL
 ~\cite{larsen1997uppaal}. Delay steps must respect location invariants,
 whereas discrete steps are enabled by guards.
 
-MPTA-Repair treats the network structure as fixed. The only repairable
+MPTA-Repair treats the NTA structure as fixed. The only repairable
 sites are numerical bound occurrences in transition guards and location
 invariants. A site $s$ containing $x\sim b_s$ may be changed to
 $x\sim(b_s+\delta_s)$, where $\delta_s$ is a variation variable. The
@@ -35,7 +35,7 @@ the current repair space.
 
 \subsection{Diagnostic Traces and Multi-Property Motivation}
 
-Timed-automata verification in this paper is reduced to safety-style
+NTA verification in this paper is reduced to safety-style
 obligations. Direct examples include queries of the form
 $\mathrm{A}[]\,\psi$ and $\mathrm{A}[]\,\mathit{not}\ \mathit{deadlock}$.
 Bounded-response or deadline requirements are handled when monitor or
@@ -92,7 +92,7 @@ resulting candidate blocks the considered violating realization, but it
 does not prove that the whole model is repaired.
 
 \noindent\textbf{Definition 3.}
-Let $M_{\mathit{bad}}$ be a faulty timed-automata network and let
+Let $M_{\mathit{bad}}$ be a faulty NTA model and let
 $\Phi=\{\varphi_1,\ldots,\varphi_m\}$ be the complete property set used
 for validation. A clock-bound repair constructs $M_{\mathit{rep}}$ by
 changing a small set of repairable bound occurrences. The repair is

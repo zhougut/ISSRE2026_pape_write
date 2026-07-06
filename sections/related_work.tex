@@ -8,7 +8,7 @@ modifications to guard and invariant bounds \cite{kolbl2019clock}. TarTar extend
 line into a repair analysis tool and introduces an admissibility check
 based on functional equivalence. MPTA-Repair builds on this foundation,
 but targets a different setting: multiple properties, multiple
-diagnostic traces, and full-property validation in timed-automata
+diagnostic traces, and full-property validation in NTA
 models from practical industrial cases.
 
 A second related direction is parameter synthesis for parametric timed
@@ -25,7 +25,7 @@ using SAT, MaxSAT, SMT, and counterexample-guided refinement \cite{weimer2009aut
 These works provide search and optimization ideas such as fault
 localization \cite{jose2011bugassist}, candidate blocking \cite{mechtaev2016angelix}, repair minimization
 \cite{nguyen2013semfix}, and abstraction refinement \cite{clarke2000cegar}. MPTA-Repair adapts this
-style of reasoning to the semantics of timed automata, where candidate
+style of reasoning to NTA semantics, where candidate
 validity must consider both timing properties and untimed behavior
 preservation.
 

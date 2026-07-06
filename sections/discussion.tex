@@ -2,7 +2,7 @@
 \label{sec:threats}
 
 \textbf{Internal validity.} The prototype includes parsers for
-timed-automata models, property files, diagnostic traces, repair sites,
+NTA models, property files, diagnostic traces, repair sites,
 and admissibility artifacts. Bugs in parsing, trace reconstruction, SMT
 encoding, candidate application, or admissibility checking may affect
 the results. We mitigate this threat by validating every accepted
@@ -14,12 +14,12 @@ faults. Such faults are appropriate for evaluating clock-bound repair,
 but they do not cover all real modeling errors. Real faults may involve
 wrong resets, missing transitions, incorrect synchronizations, data
 updates, or erroneous properties. The results should therefore be
-interpreted as evidence for clock-bound repair, not for arbitrary
-timed-automata repair.
+interpreted as evidence for clock-bound repair, not for arbitrary NTA
+repair.
 
 \textbf{External validity.} Although the industry dataset covers several
 practical domains, it is still a finite set of open or reconstructed
-models. It may not represent all industrial timed-automata models.
+models. It may not represent all industrial NTA models.
 Larger proprietary models, richer data variables, and more complex
 property specifications may introduce additional challenges.
 

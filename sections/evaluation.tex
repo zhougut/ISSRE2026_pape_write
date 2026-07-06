@@ -26,7 +26,7 @@ constraints across multiple properties.
 
 \input{tables/dataset-statistics}
 
-Since real-world timed-automata models with labeled clock-bound faults
+Since real-world NTA models with labeled clock-bound faults
 are difficult to obtain, we synthesize faulty instances using mutation
 \cite{jia2011mutation}, retaining only mutants that are syntactically
 valid, violate at least one timing safety property, and preserve the
@@ -72,7 +72,7 @@ and admissibility validations.
 \subsection{Discussion and Practical Lessons}
 
 The evaluation highlights two primary lessons for applying automated
-repair to timed automata. First, full-property regression verification
+repair to NTA models. First, full-property regression verification
 is necessary because industrial properties are often interdependent; a
 localized fix for one response-time property can inadvertently violate
 another safety property, such as maximum waiting bounds. MPTA-Repair
