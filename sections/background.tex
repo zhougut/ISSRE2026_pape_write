@@ -86,29 +86,18 @@ MPTA-Repair organizes constraints from multiple violated properties and
 TDTs into a joint solving process to generate candidate clock-bound
 repairs.
 
-\noindent\textbf{Definition 3.}
 Let $M_{\mathit{bad}}$ be a faulty NTA model and let
-$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ be the complete property set used
-for validation. A clock-bound repair constructs $M_{\mathit{rep}}$ by
-changing a small set of repairable bound occurrences. The repair is
-accepted only if the repaired bounds are well formed,
+$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ be the set of properties that must
+be satisfied simultaneously. MPTA-Repair generates a repaired model
+$M_{\mathit{rep}}$ by changing repairable numerical bound occurrences
+in guards and invariants. A candidate repair is accepted only if
 \begin{equation}
-\begin{aligned}
-  &M_{\mathit{rep}}\models \Phi \quad\text{and}\\
-  &\mathrm{Untimed}_{\Sigma_f}(M_{\mathit{bad}})
-  =
-  \mathrm{Untimed}_{\Sigma_f}(M_{\mathit{rep}})
-\end{aligned}
+  M_{\mathit{rep}}\models \bigwedge_{\varphi\in\Phi}\varphi
+  \quad\land\quad
+  \mathrm{Accept}(M_{\mathit{bad}},M_{\mathit{rep}}).
 \end{equation}
-Here $\Sigma_f$ is the functional alphabet used for admissibility after
-excluding monitor-only, observer-only, and internal labels when
-appropriate. This admissibility criterion prevents repairs that satisfy
-properties merely by disabling required actions~\cite{kolbl2019clock}.
-
-The objective in Definition~3 explains why MPTA-Repair accumulates
-property-trace constraints across refinement rounds. A bound edit that
-fixes one TDT may leave another violation feasible, break a previously
-satisfied property, or remove intended functionality. MPTA-Repair
-therefore uses TDT encodings for candidate generation only, and accepts a
-candidate only after full-property regression verification and an
-admissibility check based on functional equivalence.
+The first condition requires the repaired model to satisfy all required
+properties. The second condition denotes a TARTAR-style admissibility
+check based on functional equivalence~\cite{kolbl2019clock}. This check
+prevents repairs that satisfy properties merely by disabling required
+actions.

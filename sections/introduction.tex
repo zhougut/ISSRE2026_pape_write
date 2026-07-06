@@ -15,9 +15,14 @@ practical systems are often modeled as networks of timed automata
 bounded response, deadline satisfaction, alarm duration, and deadlock
 freedom~\cite{vogel2022patterns}. For an NTA, violating such a property
 indicates a safety defect whose discovery during implementation or
-testing can be costly. We therefore focus on clock-bound repair, since
-many timing faults are numerical guard or invariant bounds. Model
-checkers such as UPPAAL, Kronos, or opaal can return timed diagnostic
+testing can be costly. Clock-bound errors in guards and invariants are
+a common source of timed-safety violations, since incorrect deadlines,
+timeouts, or durations can make otherwise valid discrete behavior occur
+outside its permitted time window
+~\cite{kolbl2019clock,jiang2010heart,lonn1997tdma}. We therefore focus
+on clock-bound repair, which modifies numerical bounds in guards and
+invariants. Model checkers such as UPPAAL, Kronos, or opaal can return
+timed diagnostic
 traces (TDTs), i.e., timed counterexamples reaching violating
 states~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}; these
 traces expose failures but not which bound is wrong or how to change it.

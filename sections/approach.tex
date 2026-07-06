@@ -73,29 +73,31 @@ a trace path is encoded as a conjunction of linear arithmetic
 constraints:
 \begin{equation}
 \begin{aligned}
-  &\operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}) =
-  \mathit{Init}(\nu_0) \\
-  &\quad{}\land
-  \bigwedge_{i=0}^{n-1}
-  \Bigl(
+  \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau})
+  ={}& \mathit{Init}(\nu_0)\\
+  &{}\land
+  \bigwedge_{i=0}^{n-1}\Bigl(
     d_i \ge 0
-    \land \mathit{Inv}(\ell_i,\nu_i+d_i,\theta) \\
-  &\qquad{}\land
-    \mathit{Guard}(e_i,\nu_i+d_i,\theta)
-    \land \mathit{Reset}_i
+    \land \mathit{Inv}(\ell_i,\nu_i+d_i,\rho)\\
+  &{}\land
+    \mathit{Guard}(e_i,\nu_i+d_i,\rho)\\
+  &{}\land
+    \nu_{i+1}
+    =
+    \mathit{Reset}(\nu_i+d_i,R_i)
   \Bigr)
 \end{aligned}
 \end{equation}
-Here, $\mathit{Init}(\nu_0)$ initializes the clock valuations, while
-$d_i$, $\mathit{Inv}$, $\mathit{Guard}$, and $\mathit{Reset}_i$ define
-the non-negative delays, location invariants, transition guards, and
-clock resets at step $i$, respectively, under the modified bounds
-$\theta$. The original violation encoding can then be viewed as the
-conjunction of path executability and the final property violation:
+Here, $\rho$ denotes the modified bounds, and $\mathbf{z}_{\tau}$
+collects the delays and clock valuations. The reset equation
+$\nu_{i+1}=\mathit{Reset}(\nu_i+d_i,R_i)$ updates the valuation after
+transition $e_i$ by resetting clocks in $R_i$ and preserving the others.
+The original violation encoding combines path executability with the
+final property violation:
 \begin{equation}
-  \operatorname{Enc}(\tau,\varphi,\theta)
+  \operatorname{Enc}(\tau,\varphi,\rho)
   =
-  \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau})
+  \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau})
   \land
   \mathit{Bad}_{\varphi}(\ell_n,\nu_n)
 \end{equation}
@@ -106,18 +108,16 @@ skeleton, the single-trace repair constraint uses two copies of the
 trace variables:
 \begin{equation}
 \begin{aligned}
-  &\Psi_{\tau,\varphi}^{\mathrm{exec}}(\theta)
+  &\Psi_{\tau,\varphi}^{\mathrm{repair}}(\rho)
   =
-  \operatorname{QE}\Bigl(
   \exists \mathbf{z}_{\tau}^{+}.
-  \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}^{+}) \\
+  \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau}^{+}) \\
   &\quad{}\land
   \neg \exists \mathbf{z}_{\tau}^{-}.
   \Bigl(
-    \operatorname{Path}(\tau,\theta,\mathbf{z}_{\tau}^{-}) \\
+    \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau}^{-}) \\
   &\qquad{}\land
     \mathit{Bad}_{\varphi}(\ell_n^{-},\nu_n^{-})
-  \Bigr)
   \Bigr)
 \end{aligned}
 \end{equation}
@@ -136,16 +136,16 @@ MPTA-Repair assembles a joint MaxSMT problem with the constraint system
 defined as
 \begin{equation}
 \begin{aligned}
-  \Phi_k(\theta)
+  \Phi_k(\rho)
   =
-  &\mathit{Dom}(\theta)
-  \land \mathit{Block}_k(\theta) \\
+  &\mathit{Dom}(\rho)
+  \land \mathit{Block}_k(\rho) \\
   &{}\land
   \bigwedge_{(\tau,\varphi)\in \mathit{Select}(\mathcal{T}_k)}
-  \Psi_{\tau,\varphi}^{\mathrm{exec}}(\theta)
+  \Psi_{\tau,\varphi}^{\mathrm{repair}}(\rho)
 \end{aligned}
 \end{equation}
-Here, $\mathit{Dom}(\theta)$ enforces static interval consistency and
+Here, $\mathit{Dom}(\rho)$ enforces static interval consistency and
 domain limits, such as $b'_s\ge 0$, and
 $\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
 obtained after relation-aware filtering. When an instantiated candidate
@@ -156,14 +156,14 @@ incrementally. The framework expands the pool via
   =
   \mathcal{T}_k
   \cup
-  \mathit{NewTDTs}(M(\theta_k),\Phi)
+  \mathit{NewTDTs}(M(\rho_k),\Phi)
 \end{equation}
 and updates the search-space block to exclude the failed assignment
-$\theta_k$ over the set of repairable bounds $S$:
+$\rho_k$ over the set of repairable bounds $S$:
 \begin{equation}
-  \mathit{Block}_{k+1}(\theta)
+  \mathit{Block}_{k+1}(\rho)
   =
-  \mathit{Block}_k(\theta)
+  \mathit{Block}_k(\rho)
   \land
   \left(
     \bigvee_{s\in S} \delta_s \ne \delta_s^k
@@ -177,7 +177,7 @@ constraints. MPTA-Repair uses a lexicographic objective that first
 favors small repairs and then incorporates risk- and coverage-based
 priorities:
 \begin{equation}
-\operatorname*{lex\,min}_{\theta}
+\operatorname*{lex\,min}_{\rho}
 \left(
 \begin{aligned}
   &\sum_{s\in S}\mathbf{1}\{\delta_s \ne 0\},\\
@@ -199,18 +199,17 @@ of violated traces.
 \subsection{Relation-Guided Search Optimization}
 
 During refinement, accumulating violated properties, TDTs, and editable
-bounds expands the MaxSMT search space \cite{clarke2000cegar}. To
-reduce redundant constraints, MPTA-Repair uses relation-guided
-optimization to filter, group, and rank constraints and repair
-variables. These heuristics only guide the search; correctness is still
-guaranteed through full-property regression verification and an
-admissibility check.
+bounds expands the MaxSMT search space. To reduce redundant
+constraints, MPTA-Repair uses relation-guided optimization to filter,
+group, and rank constraints and repair variables. These heuristics only
+guide the search; correctness is still guaranteed through full-property
+regression verification and an admissibility check.
 
 At the property layer, timed safety properties are normalized into an
 $\mathtt{A}[]$ fragment over location predicates and clock or integer
-constraints \cite{vogel2022patterns}. Equivalence is detected by the
-syntactic identity of normalized forms, while dominance is evaluated
-under logical subsumption, e.g., $\mathtt{A}[]\, x \le 5$ subsumes
+constraints. Equivalence is detected by the syntactic identity of
+normalized forms, while dominance is evaluated under logical
+subsumption, e.g., $\mathtt{A}[]\, x \le 5$ subsumes
 $\mathtt{A}[]\, x \le 10$ within the same structural context.
 MPTA-Repair then retains only the stronger properties for solving to
 optimize efficiency.
@@ -218,11 +217,11 @@ optimize efficiency.
 At the counterexample layer, MPTA-Repair maintains a TDT pool indexed by
 violated properties. Exact duplicates are removed, and the remaining
 traces are annotated with traversed transitions, visited locations,
-active clocks, and guard or invariant bounds \cite{kolbl2019clock}.
-Traces with identical discrete transition sequences or overlapping
-clock zones are grouped to reveal common bottlenecks. A trace constraint
-is omitted from the active encoding only when it is an exact duplicate
-or soundly subsumed by an encoded trace constraint.
+active clocks, and guard or invariant bounds. Traces with identical
+discrete transition sequences or overlapping clock zones are grouped to
+reveal common bottlenecks. A trace constraint is omitted from the active
+encoding only when it is an exact duplicate or soundly subsumed by an
+encoded trace constraint.
 
 At the repair-bound layer, MPTA-Repair maps each active property-trace
 constraint to the clock bounds occurring in or affecting its encoding.
@@ -235,14 +234,13 @@ constraint system.
 \subsection{Validation, Admissibility, and Refinement}
 
 In MPTA-Repair, candidate validation determines whether a generated edit
-set can be accepted as a repair \cite{clarke1999model}. After a
-candidate edit set is generated, the repaired model is verified against
-the entire property set $\Phi$. If a candidate resolves the observed
-violation but induces new violations against the specification, it is
-rejected, indicating that the current property-trace pool is
-insufficient. MPTA-Repair then extracts the newly observed TDTs and
-appends them to the pool, guiding the subsequent refinement
-round.
+set can be accepted as a repair. After a candidate edit set is
+generated, the repaired model is verified against the entire property
+set $\Phi$. If a candidate resolves the observed violation but induces
+new violations against the specification, it is rejected, indicating
+that the current property-trace pool is insufficient. MPTA-Repair then
+extracts the newly observed TDTs and appends them to the pool, guiding
+the subsequent refinement round.
 
 Candidates that pass full-property regression verification are further
 evaluated against an admissibility check based on functional equivalence

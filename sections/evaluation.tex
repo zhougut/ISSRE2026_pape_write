@@ -5,17 +5,18 @@ This section evaluates MPTA-Repair on both benchmark and industrial
 case studies. The evaluation follows the clock-bound repair setting
 defined in Section~\ref{sec:approach}, where only numerical bounds in
 guards and invariants are repairable. For comparison, we evaluate
-MPTA-Repair against an iterative baseline extended from the TARTAR
-paradigm \cite{kolbl2019clock}.
+MPTA-Repair against an adapted iterative TARTAR-style baseline
+\cite{kolbl2019clock}.
 
 \subsection{Evaluation Strategy and Datasets}
 
 We evaluate MPTA-Repair on two datasets, summarized in
 Table~\ref{tab:dataset-statistics}. The benchmark dataset includes nine
-standard models from UPPAAL \cite{behrmann2004tutorial} and the
-XtaBenchmarkSuite \cite{farkas2018benchmarks}, such as Elevator and
-FDDI. The industrial dataset contains five closely coupled case
-studies: Gear Control System for automotive transmission
+benchmark models derived from UPPAAL benchmark
+\cite{behrmann2004tutorial} and the XtaBenchmarkSuite
+\cite{farkas2018benchmarks}, such as Elevator and FDDI. The industrial
+dataset constructed in this work contains five closely coupled NTA
+case-study models: Gear Control System for automotive transmission
 \cite{lindahl1998gear}, SAE RoR for autonomous-driving decisions
 \cite{alves2021double}, Train Controller Alarm for railway emergency
 timing \cite{gonzalez2024uppaal}, Train Gate Controller for
@@ -51,35 +52,34 @@ success rate on the benchmark dataset, whereas MPTA-Repair reaches
 baseline repairs only 20\% of the cases compared to 76\% for
 MPTA-Repair. The baseline reports a lower average duration on the
 industrial dataset because unsuccessful runs typically terminate early
-due to timeouts.
+when no valid candidate can be found.
 
 \input{tables/overall-results}
 
 The baseline remains competitive on simpler benchmarks, where injected
 timing faults are often localized to a small number of guards or
 invariants. However, its performance drops significantly on the
-industrial dataset, where concurrent component interactions and tightly
-coupled timing constraints cause trace-local repairs to fail global
-validation by producing candidates that fail the admissibility check or
-full-property regression verification.
+industrial dataset, where, under concurrent component interactions and
+tightly coupled timing constraints, trace-local repairs often produce
+candidates that fail full-property regression verification or the
+admissibility check.
 
 MPTA-Repair achieves higher success rates by integrating constraints
-from multiple counterexamples and properties into a joint generation
-process. Consequently, the framework produces coordinated, small-scale
-modifications that pass both full-property regression verification and
-the admissibility check.
+from TDTs and properties into a joint generation process. Consequently,
+the framework produces coordinated modifications that pass both
+full-property regression verification and the admissibility check.
 
 \subsection{Discussion and Practical Lessons}
 
 The evaluation highlights two primary lessons for applying automated
-repair to NTA models. First, full-property regression verification
+multi-property repair to NTA. First, full-property regression verification
 is necessary because industrial properties are often interdependent; a
 localized repair for one response-time property can inadvertently violate
 another safety property, such as maximum waiting bounds. MPTA-Repair
-avoids these regressions by treating property restoration as a global
-objective. Second, the admissibility check is critical to distinguish valid
-repairs from behavior-breaking edits that satisfy timing properties by
-failing to preserve the original functional behavior, such as preventing
+avoids these regressions by requiring each candidate to satisfy the full
+property set. Second, the admissibility check is critical to distinguish
+valid repairs from behavior-breaking edits that satisfy timing properties
+only by removing intended functional behavior, such as preventing
 critical system actions. The admissibility check ensures that property
 satisfaction is not achieved at the expense of the original functional
 behavior.
