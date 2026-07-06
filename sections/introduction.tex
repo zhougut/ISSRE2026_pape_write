@@ -44,13 +44,13 @@ studies parametric timed automata, clock-guard repair, robustness
 analysis, and SMT-based
 repair~\cite{alur1993parametric,andre2019repairing,bendik2021robustness,jose2011bugassist}.
 However, these workflows are still commonly driven by one violated
-property or one TDT at a time~\cite{kolbl2019clock}. This single-property
-style is limiting for industrial systems that must satisfy several
-properties simultaneously: a local edit that removes one violation can
-expose another. Since repairs are generated property by property, shared
-constraints among properties and repair variables are considered only
-after validation, reducing solver guidance and making globally feasible
-repairs harder to find.
+property at a time~\cite{kolbl2019clock}. This single-property style is
+limiting for industrial systems that must satisfy several properties
+simultaneously: a local edit that removes one violation can expose
+another. Because repairs are generated property by property, the
+coupling among properties and repair variables is not used to guide
+candidate generation and is exposed only during validation, reducing
+solver guidance and making globally feasible repairs harder to find.
 
 This paper presents MPTA-Repair, an automated framework for
 multi-property clock-bound repair of timed automata. Given a faulty
