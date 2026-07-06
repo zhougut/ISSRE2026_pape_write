@@ -4,30 +4,25 @@
 This paper presented MPTA-Repair, an automated workflow for
 multi-property and multi-counterexample clock-bound repair of
 industrial timed automata. To overcome the limitations of isolated
-single-trace fixes, the method accumulates diagnostic traces and
-exploits explicit relations among properties, counterexamples, and
-repairable bounds to guide a MaxSMT-based search. Each synthesized
-candidate is validated through full-property regression and an
-admissibility check based on untimed functional equivalence
-\cite{kolbl2019clock}. This design ensures that accepted repairs are
-system-level timing corrections that preserve the intended operational
-behavior.
+single-trace fixes, the method accumulates TDTs and
+exploits relations among properties, counterexamples, and repairable
+bounds to guide MaxSMT-based search. Each candidate is validated through
+full-property regression and an admissibility check based on untimed
+functional equivalence \cite{kolbl2019clock}, ensuring that accepted
+repairs preserve the intended operational behavior.
 
 Evaluations across benchmark and industrial datasets show that
 MPTA-Repair outperforms the iterative baseline, particularly in
 industrial systems with dense property interactions. The failure
-analysis further indicates that unsuccessful repairs are mainly caused by
-the difficulty of finding an admissible candidate within the given time
-budget, especially when dense timing interactions substantially enlarge
-the clock-bound repair search space.
+analysis further indicates that unsuccessful repairs mainly arise when
+the framework cannot find an admissible candidate within the time budget,
+especially as dense timing interactions enlarge the clock-bound repair
+search space.
 
 Future work will primarily focus on extending the automated repair space
 beyond numerical clock bounds to include broader structural
 modifications, such as altering synchronization labels and redesigning
-discrete control logic. We also plan to investigate the theoretical and
-algorithmic relationship between candidate repair generation and
-admissibility verification. By formally integrating behavioral
-admissibility constraints into the early stages of search-space
-formulation, we aim to proactively prune functionally invalid candidates
-and thereby improve computational efficiency for large-scale industrial
-applications.
+discrete control logic. We also plan to integrate behavioral
+admissibility constraints earlier in repair generation, so that
+functionally invalid candidates can be pruned before costly validation
+and large-scale industrial repair can be made more efficient.

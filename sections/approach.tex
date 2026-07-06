@@ -13,9 +13,9 @@ valid full-property repair can be synthesized within the resource
 budget.
 
 The framework operates on a local-generation and global-validation
-principle. While individual timed diagnostic traces (TDTs) drive
-candidate generation, validation remains global to ensure that fixing
-one violation does not introduce regressions elsewhere. To leverage the
+principle. While each TDT drives candidate generation, validation
+remains global to ensure that fixing one violation does not introduce
+regressions elsewhere. To leverage the
 interdependence where multiple violations share identical timing
 structures, MPTA-Repair maintains a joint pool of property-trace
 obligations. This joint structure enables the framework to exploit
@@ -30,9 +30,9 @@ MaxSMT problem from the active obligation pool. The synthesized
 parameter assignment is instantiated into a candidate model, which
 undergoes global validation via full-property regression and an untimed
 functional-equivalence admissibility check. A rejected candidate
-contributes newly exposed diagnostic traces back into the pool to
-further constrain subsequent rounds, whereas a candidate passing both
-checks is returned as the valid repair $M'$.
+contributes newly exposed TDTs back into the pool to further constrain
+subsequent rounds, whereas a candidate passing both checks is returned
+as the valid repair $M'$.
 Figure~\ref{fig:mpta-repair-workflow} summarizes this
 counterexample-guided refinement loop from verification and
 relation-guided MaxSMT solving to global validation.
@@ -47,11 +47,12 @@ relation-guided MaxSMT solving to global validation.
 \subsection{Joint Trace Encoding and Optimization Objective}
 
 MPTA-Repair follows the clock-bound variation strategy used in TARTAR
-\cite{kolbl2019clock}. Each modifiable numerical bound $b_s$ in a
-transition guard or location invariant is associated with a variation
-variable $\delta_s$. This ensures that the repaired constraint retains
-the original clock reference and comparison operator while incorporating
-a shifted value:
+\cite{kolbl2019clock}. Let $S$ denote the set of repairable clock-bound
+occurrences. For each occurrence $s\in S$, the original numerical bound
+$b_s$ in a transition guard or location invariant is associated with a
+variation variable $\delta_s$. This ensures that the repaired constraint
+retains the original clock reference and comparison operator while
+incorporating a shifted value:
 \begin{equation}
   b'_s = b_s + \delta_s
 \end{equation}
@@ -60,7 +61,7 @@ constants, keeping transition structures and discrete updates unaltered.
 
 MPTA-Repair builds on the trace-encoding formulation of TARTAR and
 extends it to the multi-property setting \cite{kolbl2019clock}. Given
-a timed diagnostic trace
+a TDT
 \begin{equation}
 \begin{aligned}
   \tau ={}&
@@ -155,7 +156,7 @@ incrementally. The framework expands the pool via
   =
   \mathcal{T}_k
   \cup
-  \mathit{NewTDT}(M(\theta_k),\Phi)
+  \mathit{NewTDTs}(M(\theta_k),\Phi)
 \end{equation}
 and updates the search-space block to exclude the failed assignment
 $\theta_k$ over the set of repairable bounds $S$:
@@ -239,8 +240,8 @@ candidate edit set is generated, the repaired model is verified against
 the entire property set $\Phi$. If a candidate resolves the observed
 violation but induces new violations against the specification, it is
 rejected, indicating that the current property-trace pool is
-insufficient. MPTA-Repair then extracts the newly observed diagnostic
-trace and appends it to the pool, guiding the subsequent refinement
+insufficient. MPTA-Repair then extracts the newly observed TDTs and
+appends them to the pool, guiding the subsequent refinement
 round.
 
 Candidates that pass full-property regression verification are further

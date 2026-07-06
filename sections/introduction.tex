@@ -1,37 +1,37 @@
 ﻿\section{Introduction}
 \label{sec:introduction}
 
-Timed automata (TAs) are widely used to model and verify real-time
-systems whose correctness depends on both discrete behavior and
-quantitative timing constraints~\cite{alur1994theory,bengtsson2004timed}.
-They appear in railway control, communication protocols, medical
-cyber-physical systems, and aerospace scheduling
-~\cite{basile2021unisig,lonn1997tdma,jiang2012pacemaker,david2010herschel}. In these
-systems, an alarm, message, pulse, actuation, or resource release may be
-functionally present but still incorrect if it occurs too early, too
-late, or for an invalid duration.
+Timed automata (TAs)~\cite{alur1994theory,bengtsson2004timed} are
+widely used to model and verify real-time systems in domains such as
+railway control, communication protocols, and aerospace
+scheduling~\cite{basile2021unisig,lonn1997tdma,david2010herschel}, whose
+correctness depends on both discrete behavior and quantitative timing
+constraints. In these models, alarms, messages, pulses, actuations, or
+resource releases may be functionally present but still incorrect if
+they occur too early, too late, or fall outside the permitted duration.
 
 In most practical settings, timed-automata models are validated against
 sets of properties rather than isolated assertions. These properties
 jointly capture safety,
 bounded response, timeout handling, deadline satisfaction, alarm
-duration, and deadlock freedom~\cite{vogel2022patterns}. When a property
-is violated, model checkers such as UPPAAL, Kronos, or opaal can produce a
-timed diagnostic trace (TDT), i.e., a timed counterexample that reaches a
-violating state~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. A TDT is useful
-failure evidence, but it does not identify which numerical bound is
-wrong, whether the fault lies in a guard or an invariant, or how the
+duration, and deadlock freedom~\cite{vogel2022patterns}. When properties
+are violated, model checkers such as UPPAAL, Kronos, or opaal can return
+timed diagnostic traces (TDTs), i.e., timed counterexamples that capture
+executions reaching violating
+states~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. TDTs are
+useful failure evidence, but they do not identify which numerical bound
+is wrong, whether the fault lies in a guard or an invariant, or how the
 bound should be changed.
 
-The repair problem becomes harder in the multi-property setting. A bound
-change that blocks one diagnostic trace may leave another violation
-feasible, break a property that was previously satisfied, or break
-functional equivalence with the original model. The running example in
-Section~\ref{sec:background} illustrates this effect: repairing an early
-gear-engagement violation can make an acknowledgement deadline fail. A
-practical repair method must therefore generate candidate edits from
-local counterexamples, but accept them only after complete property
-regression and behavior-preservation checks.
+Repair becomes more challenging in the setting of satisfying multiple
+properties simultaneously. A bound change that blocks one TDT may leave
+another violation feasible, violate a previously satisfied property, or
+compromise functional equivalence with the original model. The running
+example in Section~\ref{sec:background} illustrates this effect:
+repairing an early gear-engagement violation can make an acknowledgement
+deadline fail. A practical repair method must therefore generate
+candidate repairs from local counterexamples, but accept them only after
+comprehensive property regression and behavior-preservation checks.
 
 Existing repair techniques provide an important foundation. Clock-bound
 repair encodes a TDT as linear real arithmetic, introduces variation
@@ -43,11 +43,11 @@ Related work also studies parametric timed automata, clock-guard repair,
 robustness analysis, and SMT-based repair
 ~\cite{alur1993parametric,andre2019repairing,bendik2021robustness,jose2011bugassist}.
 However, TDT-based workflows are still commonly driven by one violated
-property or one diagnostic trace at a time~\cite{kolbl2019clock}.
+property or one TDT at a time~\cite{kolbl2019clock}.
 
 This paper presents MPTA-Repair, an automated framework for
 multi-property clock-bound repair of timed automata. Given a faulty
-model, a property set, and diagnostic traces, MPTA-Repair searches for
+model, a property set, and TDTs, MPTA-Repair searches for
 small changes to numerical bounds in transition guards and location
 invariants. The framework maintains a pool of property-trace constraints,
 uses relations among properties, counterexamples, and repairable bounds
