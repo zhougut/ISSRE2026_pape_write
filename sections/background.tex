@@ -1,7 +1,10 @@
 ﻿\section{Preliminaries}
 \label{sec:background}
 
-\subsection{Networks of Timed Automata and Repair Scope}
+\subsection{Networks of Timed Automata}
+
+The timed automaton model used in this paper follows the standard timed-automata
+semantics~\cite{bengtsson2004timed}.
 
 \noindent\textbf{Definition 1.}
 A timed automaton (TA) is a tuple
@@ -19,19 +22,10 @@ is satisfied, emits action $a$, and resets clocks in $R\subseteq C$.
 An NTA is a parallel composition
 $\mathcal{N}=T_1\parallel\cdots\parallel T_k$ with the synchronization
 semantics of the target modeling language, such as UPPAAL
-~\cite{larsen1997uppaal}. Delay steps must respect location invariants,
-whereas discrete steps are enabled by guards.
-
-MPTA-Repair treats the NTA structure as fixed. The only repairable
-sites are numerical bound occurrences in transition guards and location
-invariants. A site $s$ containing $x\sim b_s$ may be changed to
-$x\sim(b_s+\delta_s)$, where $\delta_s$ is a variation variable. The
-operator, clock reference, transition, location, synchronization label,
-reset set, data update, and property formula are not changed. This scope
-targets timing-parameter faults such as incorrect deadlines, timeouts,
-sampling periods, alarm durations, or minimum residence times; faults
-requiring reset, synchronization, data, or structural edits are outside
-the current repair space.
+\cite{larsen1997uppaal}. Its behavior consists of action and delay
+transitions. Action transitions are instantaneous, require their guards
+to be satisfied, and reset the specified clocks; delay transitions model
+the passage of time in a location while respecting its invariant.
 
 \subsection{Diagnostic Traces and Multi-Property Motivation}
 
