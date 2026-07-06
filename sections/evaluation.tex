@@ -30,7 +30,7 @@ Since real-world NTA models with labeled clock-bound faults
 are difficult to obtain, we synthesize faulty instances using mutation
 \cite{jia2011mutation}, retaining only mutants that are syntactically
 valid, violate at least one timing safety property, and preserve the
-untimed behavior of the original model. Each repair instance is
+original functional behavior. Each repair instance is
 executed with a 10-minute timeout for both MPTA-Repair and the
 baseline.
 
@@ -60,28 +60,29 @@ timing faults are often localized to a small number of guards or
 invariants. However, its performance drops significantly on the
 industrial dataset, where concurrent component interactions and tightly
 coupled timing constraints cause trace-local repairs to fail global
-validation by producing candidates that violate admissibility or
-regression requirements.
+validation by producing candidates that fail the admissibility check or
+full-property regression verification.
 
 MPTA-Repair achieves higher success rates by integrating constraints
 from multiple counterexamples and properties into a joint generation
 process. Consequently, the framework produces coordinated, small-scale
-modifications that successfully satisfy both full-property regression
-and admissibility validations.
+modifications that pass both full-property regression verification and
+the admissibility check.
 
 \subsection{Discussion and Practical Lessons}
 
 The evaluation highlights two primary lessons for applying automated
 repair to NTA models. First, full-property regression verification
 is necessary because industrial properties are often interdependent; a
-localized fix for one response-time property can inadvertently violate
+localized repair for one response-time property can inadvertently violate
 another safety property, such as maximum waiting bounds. MPTA-Repair
 avoids these regressions by treating property restoration as a global
-objective. Second, admissibility is critical to distinguish valid
+objective. Second, the admissibility check is critical to distinguish valid
 repairs from behavior-breaking edits that satisfy timing properties by
-disabling intended functional behaviors, such as preventing critical
-system actions. The admissibility check ensures that property
-satisfaction is not achieved at the expense of functional behavior.
+failing to preserve the original functional behavior, such as preventing
+critical system actions. The admissibility check ensures that property
+satisfaction is not achieved at the expense of the original functional
+behavior.
 
 Nevertheless, the framework can still fail to generate repairs in
 certain cases when it fails to find an admissible candidate within the

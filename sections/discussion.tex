@@ -4,7 +4,7 @@
 \textbf{Internal validity.} The prototype includes parsers for
 NTA models, property files, diagnostic traces, repair sites,
 and admissibility artifacts. Bugs in parsing, trace reconstruction, SMT
-encoding, candidate application, or admissibility checking may affect
+encoding, candidate application, or the admissibility check may affect
 the results. We mitigate this threat by validating every accepted
 candidate using the external model checker and by recording repair
 reports for each run.
@@ -25,7 +25,7 @@ property specifications may introduce additional challenges.
 
 \textbf{Baseline fairness.} The baseline is an iterative TARTAR-style
 repair workflow adapted to the multi-property setting by adding
-full-property regression and admissibility checking. This makes it
+full-property regression verification and an admissibility check. This makes it
 stronger than a one-shot baseline, but it is still not identical to the
 original setting for which TARTAR was designed. We therefore interpret
 the comparison as a comparison against a strong single-property repair

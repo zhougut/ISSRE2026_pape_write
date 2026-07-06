@@ -70,8 +70,8 @@ $\mathit{mesh}\leq 3$ and $\mathit{mesh}\geq 3$ bounds remain unchanged,
 the earliest acknowledgement occurs after $2+3=5$ time units, violating
 property $\varphi_2$, which requires acknowledgement within four time
 units. A multi-property repair must therefore adjust both
-$\mathit{cut}$ and $\mathit{mesh}$ while preserving the same untimed
-request--engage--acknowledge behavior.
+$\mathit{cut}$ and $\mathit{mesh}$ while preserving the original
+functional behavior, including the request--engage--acknowledge path.
 
 TDTs provide concrete realizations of property violations, but they do
 not explain why the violations occur. In particular, a TDT does not
@@ -100,13 +100,13 @@ accepted only if the repaired bounds are well formed,
 \end{equation}
 Here $\Sigma_f$ is the functional alphabet used for admissibility after
 excluding monitor-only, observer-only, and internal labels when
-appropriate. This TARTAR-style criterion prevents repairs that satisfy
+appropriate. This admissibility criterion prevents repairs that satisfy
 properties merely by disabling required actions~\cite{kolbl2019clock}.
 
 The objective in Definition~3 explains why MPTA-Repair accumulates
-property-trace obligations across refinement rounds. A bound edit that
+property-trace constraints across refinement rounds. A bound edit that
 fixes one TDT may leave another violation feasible, break a previously
 satisfied property, or remove intended functionality. MPTA-Repair
 therefore uses TDT encodings for candidate generation only, and accepts a
-candidate only after full-property regression and functional-admissibility
-checking.
+candidate only after full-property regression verification and an
+admissibility check based on functional equivalence.
