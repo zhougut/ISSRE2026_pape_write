@@ -1,103 +1,110 @@
 ﻿\section{Preliminaries}
 \label{sec:background}
 
-\subsection{Networks of Timed Automata}
+\subsection{Networks of Timed Automata and Properties}
 
-The timed automaton model used in this paper follows the standard timed-automata
-semantics~\cite{bengtsson2004timed}.
+The paper follows standard timed-automata semantics~\cite{bengtsson2004timed}.
+This section establishes the notation used for multi-property clock-bound repair.
 
-\noindent\textbf{Definition 1.}
+\noindent\textbf{Definition 1 (Timed automaton).}
 A timed automaton (TA) is a tuple
 \begin{equation}
-  T=(L,\ell_0,C,\Sigma,\Theta,I)
+  T=(L,\ell_0,C,\Sigma,\Theta,I),
+  \label{eq:ta}
 \end{equation}
-where $L$ is a finite set of locations, $\ell_0$ is the initial location,
-$C$ is a finite set of clocks, $\Sigma$ is a set of action labels,
-$\Theta$ is a finite set of transitions, and $I$ maps each location to a
-clock invariant. A clock constraint is a conjunction of atoms $x\sim b$,
-where $x\in C$, $\sim\in\{<,\leq,=,\geq,>\}$, and
+where $L$ is a finite set of locations, $\ell_0$ is the initial
+location, $C$ is a finite set of clocks, $\Sigma$ is a set of action
+labels, $\Theta$ is a finite set of transitions, and $I$ maps each
+location to a clock invariant. A clock constraint is a conjunction of
+atoms $x\sim b$, where $x\in C$, $\sim\in\{<,\leq,=,\geq,>\}$, and
 $b\in\mathbb{R}_{\geq 0}$. A transition
-$\theta=(\ell,g,a,R,\ell')$ moves from $\ell$ to $\ell'$ when guard $g$
-is satisfied, emits action $a$, and resets clocks in $R\subseteq C$.
-An NTA is a parallel composition
-$\mathcal{N}=T_1\parallel\cdots\parallel T_k$ with the synchronization
-semantics of the target modeling language, such as UPPAAL
-\cite{larsen1997uppaal}. Its behavior consists of action and delay
-transitions. Action transitions are instantaneous, require their guards
-to be satisfied, and reset the specified clocks; delay transitions model
-the passage of time in a location while respecting its invariant.
+$\theta=(\ell,g,a,R,\ell')$ moves from $\ell$ to $\ell'$ when guard
+$g$ is satisfied, emits action $a$, and resets clocks in $R\subseteq C$.
+Each numerical constant $b$ occurring in a guard or invariant is a
+clock-bound occurrence. MPTA-Repair only changes repairable
+clock-bound occurrences; it does not modify locations, transitions,
+synchronization labels, clock references, resets, data updates, or
+properties.
 
-\subsection{Timed Diagnostic Traces (TDTs) and Multi-Property Motivation}
-
-This paper focuses on timed safety properties, which are commonly used
-to specify deadlines, bounded waiting, and reachable error states in
-real-time systems. Such properties can be checked by tools such as
-UPPAAL: given an NTA and a property, the verifier either confirms the
-property or returns a counterexample trace~\cite{vogel2022patterns}.
-
-\noindent\textbf{Definition 2.}
-A symbolic timed trace (STT) of a model is a finite transition sequence
-$S=\theta_0,\ldots,\theta_{n-1}$. A realization of $S$ is a sequence of
-non-negative delays $d_0,\ldots,d_n$ and states
-$s_0,\ldots,s_{n+1}$ such that, for every $i<n$, the model can delay
-from $s_i$ by $d_i$ and then take $\theta_i$ to $s_{i+1}$ while
-respecting guards, resets, invariants, and synchronizations; the final
-delay $d_n$ leads from $s_n$ to $s_{n+1}$. The STT is feasible if it has
-at least one realization. Given a safety property $\varphi$, a feasible
-STT is a TDT for $\varphi$ if at least one realization reaches a state
-that violates $\varphi$.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.58\columnwidth]{figures/gear_shift_nta_Driver-cropped.pdf}\\[-0.35em]
-  {\footnotesize (a) Driver}\\[0.2em]
-  \includegraphics[width=0.98\columnwidth]{figures/gear_shift_nta_GearController-cropped.pdf}\\[-0.55em]
-  {\footnotesize (b) GearController}
-  \caption{Simplified gear-shift example.}
-  \label{fig:gear-shift-nta}
-  \vspace{-0.5em}
-\end{figure}
-
-\noindent\textit{Example 1.}
-Figure~\ref{fig:gear-shift-nta} shows the running gear-shift example.
-We check $\varphi_1$,
-\texttt{A[] (Controller.Engage imply cut >= 2)}, and $\varphi_2$,
-\texttt{A[] not Controller.Late}. In the faulty controller, the
-\texttt{Cut} invariant $\mathit{cut}\leq 1$ and the
-\texttt{Cut}$\to$\texttt{Engage} guard $\mathit{cut}\geq 1$ allow
-engagement after one time unit, violating $\varphi_1$. A single-property
-repair raises both $\mathit{cut}$ bounds to $2$. If the \texttt{Engage}
-invariant $\mathit{mesh}\leq 3$ and the
-\texttt{Engage}$\to$\texttt{Ready} guard $\mathit{mesh}\geq 3$ remain
-unchanged, the controller cannot return to \texttt{Ready} until
-$2+3=5$ time units after the request. It can therefore reach
-\texttt{Controller.Late} and violate $\varphi_2$. A multi-property repair
-must therefore adjust both $\mathit{cut}$ and $\mathit{mesh}$ while
-preserving the original functional behavior.
-
-TDTs provide concrete realizations of property violations, but they do
-not explain why the violations occur. In particular, a TDT does not
-identify which numerical bound is faulty or whether the relevant bound
-appears in a guard or an invariant. Following the idea of TARTAR
-\cite{kolbl2019clock}, the repair procedure developed later in this
-paper encodes TDTs as arithmetic constraints over trace feasibility,
-property violation, and bound variations. Unlike single-property repair,
-MPTA-Repair organizes constraints from multiple violated properties and
-TDTs into a joint solving process to generate candidate clock-bound
-repairs.
-
-Let $M_{\mathit{bad}}$ be a faulty NTA model and let
-$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ be the set of properties that must
-be satisfied simultaneously. MPTA-Repair generates a repaired model
-$M_{\mathit{rep}}$ by changing repairable numerical bound occurrences
-in guards and invariants. A candidate repair is accepted only if
+\noindent\textbf{Definition 2 (NTA with property set).}
+An NTA specification consists of a network of timed automata and the
+properties that the network must satisfy:
 \begin{equation}
-  M_{\mathit{rep}}\models \bigwedge_{\varphi\in\Phi}\varphi
-  \quad\land\quad
-  \mathrm{Accept}(M_{\mathit{bad}},M_{\mathit{rep}}).
+\begin{aligned}
+  \mathcal{M} &= (\mathcal{N},\Phi),\\
+  \mathcal{N} &= T_1\parallel\cdots\parallel T_k,\\
+  \Phi &= \{\varphi_1,\ldots,\varphi_m\}.
+\end{aligned}
+\label{eq:nta-property-set}
 \end{equation}
-The first condition requires the repaired model to satisfy all required
-properties. The second condition denotes a TARTAR-style admissibility
-check based on functional equivalence~\cite{kolbl2019clock}. This check
-prevents repairs that satisfy properties merely by disabling required
-actions.
+The network $\mathcal{N}$ models a real-time system by composing
+interacting timed automata, with synchronization semantics supplied by
+the target modeling language, such as UPPAAL~\cite{larsen1997uppaal}.
+The property set $\Phi$ is part of the system specification: it states
+the timing and behavioral requirements that the NTA must satisfy. For
+convenience, $\mathcal{N}\models\Phi$ denotes that every property in
+$\Phi$ holds over the reachable states of $\mathcal{N}$.
+
+The repair problem considered here is restricted to timed safety
+properties, which require a state predicate to hold over all reachable
+states. In UPPAAL-style notation, such properties often have the
+invariant form $\texttt{A[]}\,p$, where $p$ may combine location
+predicates, data predicates, and clock constraints. Clocks are central
+to timed safety properties because deadlines, timeouts, durations, and
+earliest or latest event times are expressed by numerical bounds over
+clock values.
+
+\subsection{Timed Diagnostic Traces and Accepted Repairs}
+
+\noindent\textbf{Definition 3 (Timed diagnostic trace).}
+Given an NTA specification $\mathcal{M}=(\mathcal{N},\Phi)$ and a
+property $\varphi\in\Phi$, a timed diagnostic trace (TDT) for
+$\varphi$ is a feasible finite timed execution of $\mathcal{N}$ that
+reaches a state violating $\varphi$. In practice, a TDT is returned by
+a model checker when verification of $\varphi$ fails. It records the
+relevant locations and transitions, guards and invariants, clock resets,
+timing information such as delays or zones, and the violation point.
+
+In MPTA-Repair, each TDT is treated as a property-trace constraint:
+the violated property identifies the requirement to be restored, and
+the trace identifies the timed behavior that makes the violation
+feasible. Section~\ref{sec:approach} uses such constraints from
+multiple properties in a joint solving process.
+
+\noindent\textbf{Definition 4 (Untimed functional equivalence).}
+For an NTA $\mathcal{N}$, let $L_\mu(\mathcal{N})$ denote the untimed
+language obtained by abstracting from delays while preserving the
+discrete action or transition behavior feasible under the timing
+constraints. Two NTA models $\mathcal{N}_1$ and $\mathcal{N}_2$ are
+untimed functionally equivalent if
+\begin{equation}
+    L_\mu(\mathcal{N}_1)=L_\mu(\mathcal{N}_2).
+\end{equation}
+This notion follows the functional-equivalence criterion used for
+clock-bound repair~\cite{kolbl2019clock}: a timing repair should not
+remove intended discrete behavior or add new discrete behavior, even
+though it changes timing constraints to eliminate violations.
+
+\noindent\textbf{Definition 5 (Accepted repair).}
+Let $\mathcal{M}_{\mathit{bad}}=(\mathcal{N}_{\mathit{bad}},\Phi)$ be
+a faulty NTA specification. A candidate repaired model
+$\mathcal{M}_{\mathit{rep}}=(\mathcal{N}_{\mathit{rep}},\Phi)$ is
+obtained by changing only repairable clock-bound occurrences in guards
+and invariants. The candidate is accepted as a repair only if
+\begin{equation}
+  \mathcal{N}_{\mathit{rep}}
+  \models
+  \bigwedge_{\varphi\in\Phi}\varphi
+  \quad\land\quad
+  L_\mu(\mathcal{N}_{\mathit{bad}})
+  =
+  L_\mu(\mathcal{N}_{\mathit{rep}}).
+  \label{eq:accepted-repair}
+\end{equation}
+The first conjunct corresponds to full-property regression verification:
+the repaired model must satisfy the entire property set, not only the
+property that produced the current TDT. The second conjunct is the
+admissibility check based on untimed functional equivalence; it prevents
+repairs that make properties true by disabling required functional
+behavior. MPTA-Repair uses this accepted-repair condition as the global
+validation criterion for candidates generated from local TDT evidence.
