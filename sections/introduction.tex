@@ -6,52 +6,51 @@ quantitative timing requirements. In railway control, communication
 protocols, and aerospace scheduling
 ~\cite{basile2021unisig,lonn1997tdma,david2010herschel},
 correctness depends not only on which actions occur, but also on whether
-they occur within permitted time windows. We focus on timed safety
-properties rather than unbounded liveness properties, because deadlines,
-bounded waiting, alarm durations, and error-state reachability describe
-finite executions whose violations are directly observable during design
-and testing~\cite{kolbl2019clock,vogel2022patterns}. Timed automata
-(TAs) model such behavior with clocks, guards, resets, and invariants
+they occur within permitted time windows. The scope of this paper is
+timed safety properties rather than unbounded liveness properties,
+because deadlines, bounded waiting, alarm durations, and error-state
+reachability describe finite executions whose violations are directly
+observable during design and testing
+~\cite{kolbl2019clock,vogel2022patterns}. Timed automata (TAs) model
+such behavior with clocks, guards, resets, and invariants
 ~\cite{alur1994theory,bengtsson2004timed}; practical systems are often
 modeled as networks of timed automata (NTA).
 
-Within timed safety verification, clock behavior is central. Clocks and
-their constraints encode deadlines, timeouts, durations, and delays. An
+Clock behavior is central to timed safety verification. Clocks and their
+constraints encode deadlines, timeouts, durations, and delays. An
 incorrect numerical bound in a transition guard or location invariant can
 make otherwise valid discrete behavior occur too early, too late, or for
 an invalid duration
-~\cite{kolbl2019clock,jiang2010heart,lonn1997tdma}. This paper therefore
-studies clock-bound repair for NTA models, modifying only numerical
-bounds in guards and invariants while leaving properties, locations,
-transitions, synchronizations, clock references, resets, and data updates
-unchanged. Model checkers such as UPPAAL, Kronos, and opaal can return
-timed diagnostic traces (TDTs), i.e., timed counterexamples reaching
+~\cite{kolbl2019clock,jiang2010heart,lonn1997tdma}. This paper studies
+clock-bound repair for NTA models, modifying only numerical bounds in
+guards and invariants while leaving properties, locations, transitions,
+synchronizations, clock references, resets, and data updates unchanged.
+Model checkers such as UPPAAL, Kronos, and opaal can return timed
+diagnostic traces (TDTs), namely timed counterexamples reaching
 violating states
-~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. A TDT is
-useful failure evidence, but it is not a repair instruction: it exposes
-failures but not which bound is wrong or how to change it.
+~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. A TDT
+exposes a violating execution, but it does not identify a globally
+acceptable clock-bound edit.
 
 Repair is more difficult when an NTA must satisfy multiple properties
 simultaneously. A bound change that blocks one TDT may leave another
 violation feasible, violate a previously satisfied property, or
-compromise the original functional behavior. In this paper, functional behavior
-means the untimed discrete behavior characterized by functional
-equivalence. The central difficulty is not merely to block one
-counterexample, but to accept a repair only when it satisfies the full
-property set and preserves the original functional behavior. The running
-example in Section~\ref{sec:background} illustrates this effect:
-repairing an early gear-engagement violation can make an acknowledgement
-deadline fail. A practical repair method should therefore generate small
-and inspectable candidate edits, but accept them only after
-full-property regression verification and an admissibility check based on
-untimed functional equivalence~\cite{kolbl2019clock}.
+compromise the original functional behavior. In this paper, functional
+behavior means the untimed discrete behavior characterized by functional
+equivalence. Thus, local trace elimination is necessary but insufficient:
+a candidate edit should be accepted only when it satisfies the full
+property set and preserves the original functional behavior. A practical
+repair method should therefore generate small and inspectable
+candidate edits from local TDT evidence, but accept a candidate only
+after full-property regression verification and an admissibility check
+based on untimed functional equivalence~\cite{kolbl2019clock}.
 
 Existing repair techniques provide an important foundation. TARTAR
 ~\cite{kolbl2019clock} introduced TDT-based clock-bound repair by
-encoding a TDT into linear real arithmetic constraints, solving a MaxSMT problem for small bound
-changes, and checking admissibility by functional equivalence. Related
-work studies parametric timed automata, clock-guard repair, robustness
-analysis, and SMT-based repair
+encoding a TDT into linear real arithmetic constraints, solving a
+MaxSMT problem for small bound changes, and checking admissibility
+through functional equivalence. Related work studies parametric timed
+automata, clock-guard repair, robustness analysis, and SMT-based repair
 ~\cite{alur1993parametric,andre2019repairing,bendik2021robustness,jose2011bugassist}.
 However, these workflows are primarily trace-local and single-property
 in style. When repairs are generated property by property, the coupling
@@ -66,8 +65,8 @@ property-trace constraint, maintain a shared constraint pool, and use
 relations among properties, counterexamples, and repairable bounds to
 guide MaxSMT-based candidate generation. Each candidate is validated by
 full-property regression verification and an admissibility check based on
-functional equivalence. If validation exposes new violations, their TDTs
-are added to the pool and the solver is invoked again.
+untimed functional equivalence. If validation exposes new violations,
+their TDTs are added to the pool and the solver is invoked again.
 
 We evaluate MPTA-Repair on benchmarks derived from UPPAAL
 \cite{behrmann2004tutorial} and the XtaBenchmarkSuite
@@ -80,15 +79,15 @@ dataset.
 
 This paper makes three contributions. First, it formulates simultaneous
 multi-property clock-bound repair for NTA models under full-property
-satisfaction and functional preservation. Second, it introduces an
-iterative MaxSMT workflow based on a shared property-trace constraint
-pool and relation-guided candidate generation. Third, it evaluates the
-framework on benchmark and industrial faulty models, showing that joint
-multi-property repair is more effective than an iterative trace-local
-baseline in this setting.
+satisfaction and preservation of untimed functional behavior. Second, it
+introduces an iterative MaxSMT workflow based on a shared property-trace
+constraint pool and relation-guided candidate generation. Third, it
+evaluates the framework on benchmark and industrial faulty models,
+showing that joint multi-property repair is more effective than an
+iterative trace-local baseline in this setting.
 
 The remainder of the paper is organized as follows.
-Section~\ref{sec:background} introduces the preliminaries and problem
-setting. Section~\ref{sec:approach} presents MPTA-Repair.
-Section~\ref{sec:evaluation} reports the experimental evaluation.
-Section~\ref{sec:conclusion} concludes the paper.
+Section~\ref{sec:background} introduces the notation and
+accepted-repair condition. Section~\ref{sec:approach} presents
+MPTA-Repair. Section~\ref{sec:evaluation} reports the experimental
+evaluation. Section~\ref{sec:conclusion} concludes the paper.
