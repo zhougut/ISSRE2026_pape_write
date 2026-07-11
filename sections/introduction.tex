@@ -1,63 +1,80 @@
 ﻿\section{Introduction}
 \label{sec:introduction}
 
-Real-time systems combine discrete control logic with quantitative
-timing requirements. In railway control, communication protocols, and
-aerospace scheduling~\cite{basile2021unisig,lonn1997tdma,david2010herschel},
-safety depends on actions satisfying permitted time bounds; an alarm,
-message, pulse, actuation, or resource release may be unsafe if it
-occurs too early, too late, or for an invalid duration.
+Real-time systems are widely used in domains such as railway control,
+communication protocols, and aerospace scheduling
+~\cite{basile2021unisig,lonn1997tdma,david2010herschel}. Their
+correctness depends not only on whether they exhibit the intended
+discrete behavior, but also on whether relevant actions occur within the
+required time bounds. Timed automata (TAs) provide a formalism for
+modeling these two aspects by extending finite-state automata with
+real-valued clocks and timing constraints that govern both the
+occurrence of transitions and the time spent in locations
+~\cite{alur1994theory,bengtsson2004timed}. Systems composed of multiple
+interacting components are commonly represented as networks of timed
+automata (NTA). In practice, NTA are typically verified against sets of
+properties that collectively specify the required system behavior,
+including safety and liveness requirements
+~\cite{clarke2018handbook,vogel2022patterns}.
 
-Timed automata (TAs) model such behavior with locations, clocks, guards,
-resets, and invariants~\cite{alur1994theory,bengtsson2004timed};
-practical systems are often modeled as networks of timed automata
-(NTA). Safety requirements are encoded as verifiable properties, such as
-bounded response, deadline satisfaction, alarm duration, and deadlock
-freedom~\cite{vogel2022patterns}. For an NTA, violating such a property
-indicates a safety defect whose discovery during implementation or
-testing can be costly. Clock-bound errors in guards and invariants are
-a common source of timed-safety violations, since incorrect deadlines,
-timeouts, or durations can make otherwise valid discrete behavior occur
-outside its permitted time window
-~\cite{kolbl2019clock,jiang2010heart,lonn1997tdma}. We therefore focus
-on clock-bound repair, which modifies numerical bounds in guards and
-invariants. Model checkers such as UPPAAL, Kronos, or opaal can return
-timed diagnostic
-traces (TDTs), i.e., timed counterexamples reaching violating
-states~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}; these
-traces expose failures but not which bound is wrong or how to change it.
+Among the properties checked for an NTA, this work focuses on timed
+safety properties. This scope is motivated by the diagnostic basis of
+clock-bound repair: violations of such properties can be witnessed by
+finite timed executions, which provide concrete evidence for subsequent
+repair analysis~\cite{kolbl2019clock,vogel2022patterns}. Timed safety
+properties specify bounded timing requirements, such as deadlines,
+limits on waiting times, and valid execution durations. Guaranteed
+timed safety presents a significant challenge in complex NTAs with
+numerous interacting components. In these models, multiple real-valued
+clocks advance simultaneously, and their constraints determine when
+transitions may occur and how long the system may remain in a location.
+As a result, an incorrect numerical clock bound may affect executions
+across multiple components, causing an action to occur too early, too
+late, or for an invalid duration, and thereby violating a timed safety
+property~\cite{kolbl2019clock,jiang2010heart,lonn1997tdma}. When such a
+violation is detected, the erroneous clock bounds must be repaired
+while preserving the intended functional behavior of the system.
 
-Repair becomes more challenging in the setting of satisfying multiple
-properties simultaneously. A bound change that blocks one TDT may leave
-another violation feasible, violate a previously satisfied property, or
-compromise the original functional behavior. In this paper, functional 
-behavior refers to the untimed discrete behavior characterized by functional 
-equivalence. The running
-example in Section~\ref{sec:background} illustrates this effect:
-repairing an early gear-engagement violation can make an acknowledgement
-deadline fail. A practical repair method must therefore generate
-candidate repairs from local counterexamples, but accept them only after
-full-property regression verification and a TARTAR-style admissibility
-check based on untimed functional equivalence~\cite{kolbl2019clock}.
+When a property violation is detected, real-time model checkers such as
+UPPAAL, Kronos, and opaal can return a timed counterexample, commonly
+called a timed diagnostic trace (TDT)
+~\cite{larsen1997uppaal,daws1996kronos,dalsgaard2011opaal}. A TDT
+describes a timed sequence of transitions and delays that leads the NTA
+from its initial state to a state in which the property is violated. It
+shows how the violation occurs, but does not explain which clock bounds
+caused it or how those bounds should be changed. This repair problem
+becomes more difficult when an NTA must satisfy multiple properties
+simultaneously. Even if a candidate clock-bound change resolves the
+violation witnessed by one TDT, other violations may remain, and the
+same change may cause a previously satisfied property to fail or
+compromise the original functional behavior. Therefore, a candidate
+repair cannot be accepted solely because it resolves an individual
+violation; it must also be validated against the full property set and
+checked for admissibility based on functional equivalence.
 
-Existing repair techniques provide an important foundation. The TARTAR
-framework~\cite{kolbl2019clock} establishes a baseline for clock-bound
-repair by encoding a TDT into linear real arithmetic formulas that capture both path
-feasibility and the violated property condition. By introducing
-variation variables for numerical clock bounds, it uses MaxSMT solving
-to compute small changes to guards and invariants while verifying
-admissibility check based on functional equivalence. Related work also
-studies parametric timed automata, clock-guard repair, robustness
-analysis, and SMT-based
-repair~\cite{alur1993parametric,andre2019repairing,bendik2021robustness,jose2011bugassist}.
-However, these workflows are still commonly driven by one violated
-property at a time~\cite{kolbl2019clock}. This single-property style is
-limiting for industrial systems that must satisfy several properties
-simultaneously: a local edit that removes one violation can expose
-another. Because repairs are generated property by property, the
-coupling among properties and repair variables is not used to guide
-candidate generation and is exposed only during validation, reducing
-solver guidance and making globally feasible repairs harder to find.
+Parameterization and constraint solving provide a general basis for
+repairing timing constraints in timed automata. A common strategy is to
+replace selected clock bounds with parameters and synthesize valuations
+under which the resulting model satisfies a specified property. Knapik
+and Penczek encode bounded executions of parametric timed automata as
+SMT formulas and synthesize parameter valuations for reachability
+properties~\cite{knapik2016smt}. A related abstraction-and-testing
+method replaces clock constants in transition guards with parameters
+and combines generated timed tests, an external oracle, and parameter
+synthesis to construct a repaired model~\cite{andre2019repairing}.
+Unlike property-based repair, this method relies on black-box
+behavioral observations. TARTAR~\cite{kolbl2019clock}, in contrast,
+encodes the timing constraints of a TDT in linear real arithmetic and
+uses MaxSMT to generate candidate repairs with minimal changes to clock
+bounds. It then performs an admissibility check based on functional
+equivalence to determine whether a candidate preserves the original
+functional behavior. Although these methods show that parameterization
+and constraint solving can support automated model repair, their repair
+or synthesis procedures are formulated for an individual property,
+oracle, or TDT rather than a property set that must be satisfied
+simultaneously. As a result, they do not provide an iterative repair
+strategy or search optimization specifically designed for the
+multi-property setting.
 
 This paper presents MPTA-Repair, an automated framework for simultaneous
 multi-property clock-bound repair of NTA via iterative
