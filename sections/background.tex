@@ -31,19 +31,19 @@ An NTA specification consists of a network of timed automata and the
 properties that the network must satisfy:
 \begin{equation}
 \begin{aligned}
-  \mathcal{M} &= (\mathcal{N},\Phi),\\
-  \mathcal{N} &= T_1\parallel\cdots\parallel T_k,\\
+  M &= (N,\Phi),\\
+  N &= T_1\parallel\cdots\parallel T_k,\\
   \Phi &= \{\varphi_1,\ldots,\varphi_m\}.
 \end{aligned}
 \label{eq:nta-property-set}
 \end{equation}
-The network $\mathcal{N}$ models a real-time system by composing
+The network $N$ models a real-time system by composing
 interacting timed automata, with synchronization semantics supplied by
 the target modeling language, such as UPPAAL~\cite{larsen1997uppaal}.
 The property set $\Phi$ is part of the system specification: it states
 the timing and behavioral requirements that the NTA must satisfy. For
-convenience, $\mathcal{N}\models\Phi$ denotes that every property in
-$\Phi$ holds over the reachable states of $\mathcal{N}$.
+convenience, $N\models\Phi$ denotes that every property in
+$\Phi$ holds over the reachable states of $N$.
 
 The repair problem considered here is restricted to timed safety
 properties, which require a state predicate to hold over all reachable
@@ -57,9 +57,9 @@ clock values.
 \subsection{Timed Diagnostic Traces and Accepted Repairs}
 
 \noindent\textbf{Definition 3 (Timed diagnostic trace).}
-Given an NTA specification $\mathcal{M}=(\mathcal{N},\Phi)$ and a
+Given an NTA specification $M=(N,\Phi)$ and a
 property $\varphi\in\Phi$, a timed diagnostic trace (TDT) for
-$\varphi$ is a feasible finite timed execution of $\mathcal{N}$ that
+$\varphi$ is a feasible finite timed execution of $N$ that
 reaches a state violating $\varphi$. In practice, a TDT is returned by
 a model checker when verification of $\varphi$ fails. It records the
 relevant locations and transitions, guards and invariants, clock resets,
@@ -72,13 +72,13 @@ feasible. Section~\ref{sec:approach} uses such constraints from
 multiple properties in a joint solving process.
 
 \noindent\textbf{Definition 4 (Untimed functional equivalence).}
-For an NTA $\mathcal{N}$, let $L_\mu(\mathcal{N})$ denote the untimed
+For an NTA $N$, let $L_\mu(N)$ denote the untimed
 language obtained by abstracting from delays while preserving the
 discrete action or transition behavior feasible under the timing
-constraints. Two NTA models $\mathcal{N}_1$ and $\mathcal{N}_2$ are
+constraints. Two NTA models $N_1$ and $N_2$ are
 untimed functionally equivalent if
 \begin{equation}
-    L_\mu(\mathcal{N}_1)=L_\mu(\mathcal{N}_2).
+    L_\mu(N_1)=L_\mu(N_2).
 \end{equation}
 This notion follows the functional-equivalence criterion used for
 clock-bound repair~\cite{kolbl2019clock}: a timing repair should not
@@ -86,19 +86,19 @@ remove intended discrete behavior or add new discrete behavior, even
 though it changes timing constraints to eliminate violations.
 
 \noindent\textbf{Definition 5 (Accepted repair).}
-Let $\mathcal{M}_{\mathit{bad}}=(\mathcal{N}_{\mathit{bad}},\Phi)$ be
+Let $M_{\mathit{bad}}=(N_{\mathit{bad}},\Phi)$ be
 a faulty NTA specification. A candidate repaired model
-$\mathcal{M}_{\mathit{rep}}=(\mathcal{N}_{\mathit{rep}},\Phi)$ is
+$M_{\mathit{rep}}=(N_{\mathit{rep}},\Phi)$ is
 obtained by changing only repairable clock-bound occurrences in guards
 and invariants. The candidate is accepted as a repair only if
 \begin{equation}
-  \mathcal{N}_{\mathit{rep}}
+  N_{\mathit{rep}}
   \models
-  \bigwedge_{\varphi\in\Phi}\varphi
+  \Phi
   \quad\land\quad
-  L_\mu(\mathcal{N}_{\mathit{bad}})
+  L_\mu(N_{\mathit{bad}})
   =
-  L_\mu(\mathcal{N}_{\mathit{rep}}).
+  L_\mu(N_{\mathit{rep}}).
   \label{eq:accepted-repair}
 \end{equation}
 The first conjunct corresponds to full-property regression verification:

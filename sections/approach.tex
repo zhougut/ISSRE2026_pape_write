@@ -84,12 +84,18 @@ a TDT
 \begin{equation}
 \begin{aligned}
   \tau ={}&
-  \ell_0 \xrightarrow{d_0,e_0} \ell_1 \cdots \\
-  &{}\xrightarrow{d_{n-1},e_{n-1}} \ell_n
+  \ell_0 \xrightarrow{d_0,\theta_0} \ell_1 \cdots \\
+  &{}\xrightarrow{d_{n-1},\theta_{n-1}} \ell_n
 \end{aligned}
 \end{equation}
-a trace path is encoded as a conjunction of linear arithmetic
-constraints:
+where $n$ is the number of discrete transitions, $d_i$ is the delay
+before the $i$th transition, and
+$\theta_i=(\ell_i,g_i,a_i,R_i,\ell_{i+1})$ is the $i$th transition.
+Let $\rho=(b'_s)_{s\in S}$ denote the modified-bound vector, and let
+$\mathbf{z}_{\tau}=(d_0,\ldots,d_{n-1},\nu_0,\ldots,\nu_n)$ collect
+the delays and clock valuations, where $\nu_i$ is the clock valuation
+at location $\ell_i$. Then the trace path is encoded as a conjunction
+of linear arithmetic constraints:
 \begin{equation}
 \begin{aligned}
   \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau})
@@ -99,7 +105,7 @@ constraints:
     d_i \ge 0
     \land \mathit{Inv}(\ell_i,\nu_i+d_i,\rho)\\
   &{}\land
-    \mathit{Guard}(e_i,\nu_i+d_i,\rho)\\
+    \mathit{Guard}(\theta_i,\nu_i+d_i,\rho)\\
   &{}\land
     \nu_{i+1}
     =
@@ -107,10 +113,13 @@ constraints:
   \Bigr)
 \end{aligned}
 \end{equation}
-Here, $\rho$ denotes the modified bounds, and $\mathbf{z}_{\tau}$
-collects the delays and clock valuations. The reset equation
+Here, $\mathit{Init}(\nu_0)$ constrains the initial clock valuation,
+$\mathit{Inv}$ evaluates the invariant $I(\ell_i)$, and
+$\mathit{Guard}$ evaluates the guard $g_i$ of transition $\theta_i$
+under the given valuation and modified bounds. The reset equation
 $\nu_{i+1}=\mathit{Reset}(\nu_i+d_i,R_i)$ updates the valuation after
-transition $e_i$ by resetting clocks in $R_i$ and preserving the others.
+transition $\theta_i$ by resetting clocks in $R_i$ and preserving the
+others.
 The original violation encoding combines path executability with the
 final property violation:
 \begin{equation}
@@ -123,8 +132,9 @@ final property violation:
 The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$ characterizes the
 violation state of $\varphi$ at the final location. To block this
 violating behavior while preserving executability of the discrete path
-skeleton, the single-trace repair constraint uses two copies of the
-trace variables:
+skeleton, the single-trace repair constraint uses two disjoint copies
+$\mathbf{z}_{\tau}^{+}$ and $\mathbf{z}_{\tau}^{-}$ of the delay and
+clock-valuation variables:
 \begin{equation}
 \begin{aligned}
   &\Psi_{\tau,\varphi}^{\mathrm{repair}}(\rho)
@@ -136,7 +146,7 @@ trace variables:
   \Bigl(
     \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau}^{-}) \\
   &\qquad{}\land
-    \mathit{Bad}_{\varphi}(\ell_n^{-},\nu_n^{-})
+    \mathit{Bad}_{\varphi}(\ell_n,\nu_n^{-})
   \Bigr)
 \end{aligned}
 \end{equation}
@@ -151,8 +161,9 @@ currently violated properties are accumulated into a trace pool
 \begin{equation}
   \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}
 \end{equation}
-MPTA-Repair assembles a joint MaxSMT problem with the constraint system
-defined as
+where $m_k=|\mathcal{T}_k|$ is the number of property-trace pairs in
+the pool at round $k$. MPTA-Repair assembles a joint MaxSMT problem with
+the constraint system defined as
 \begin{equation}
 \begin{aligned}
   \mathcal{F}_k(\rho)
@@ -165,10 +176,11 @@ defined as
 \end{aligned}
 \end{equation}
 Here, $\mathit{Dom}(\rho)$ enforces static interval consistency and
-domain limits, such as $b'_s\ge 0$, and
-$\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
-obtained after relation-aware filtering. When an instantiated candidate
-NTA fails verification, the constraint system is updated
+domain limits, such as $b'_s\ge 0$; $\mathit{Block}_k(\rho)$ collects
+the blocking clauses accumulated before round $k$ and is initially
+true; and $\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset
+of traces obtained after relation-aware filtering. When an instantiated
+candidate NTA fails verification, the constraint system is updated
 incrementally. The framework expands the pool via
 \begin{equation}
   \mathcal{T}_{k+1}
@@ -177,8 +189,12 @@ incrementally. The framework expands the pool via
   \cup
   \mathit{NewTDTs}(N(\rho_k),\Phi)
 \end{equation}
-and updates the search-space block to exclude the failed assignment
-$\rho_k$ over the set of repairable bounds $S$:
+where $\rho_k$ is the modified-bound assignment produced in round $k$,
+$N(\rho_k)$ is the candidate network obtained by applying $\rho_k$ to
+$N$, and $\mathit{NewTDTs}(N(\rho_k),\Phi)$ is the set of newly exposed
+property-trace pairs returned by full-property verification. The
+framework then updates the search-space block to exclude the failed
+assignment $\rho_k$ over the set of repairable bounds $S$:
 \begin{equation}
   \mathit{Block}_{k+1}(\rho)
   =
@@ -225,11 +241,11 @@ guide the search; correctness is still guaranteed through full-property
 regression verification and an admissibility check.
 
 At the property layer, timed safety properties are normalized into an
-$\mathtt{A}[]$ fragment over location predicates and clock or integer
+$\texttt{A[]}$ fragment over location predicates and clock or integer
 constraints. Equivalence is detected by the syntactic identity of
 normalized forms, while dominance is evaluated under logical
-subsumption, e.g., $\mathtt{A}[]\, x \le 5$ subsumes
-$\mathtt{A}[]\, x \le 10$ within the same structural context.
+subsumption, e.g., $\texttt{A[]}\, x \le 5$ subsumes
+$\texttt{A[]}\, x \le 10$ within the same structural context.
 MPTA-Repair then retains only the stronger properties for solving to
 optimize efficiency.
 
