@@ -58,22 +58,17 @@ replace selected clock bounds with parameters and synthesize valuations
 under which the resulting model satisfies a specified property. Knapik
 and Penczek encode bounded executions of parametric timed automata as
 SMT formulas and synthesize parameter valuations for reachability
-properties~\cite{knapik2016smt}. A related abstraction-and-testing
-method replaces clock constants in transition guards with parameters
-and combines generated timed tests, an external oracle, and parameter
-synthesis to construct a repaired model~\cite{andre2019repairing}.
-Unlike property-based repair, this method relies on black-box
-behavioral observations. TARTAR~\cite{kolbl2019clock}, in contrast,
-encodes the timing constraints of a TDT in linear real arithmetic and
-uses MaxSMT to generate candidate repairs with minimal changes to clock
-bounds. It then performs an admissibility check based on functional
-equivalence to determine whether a candidate preserves the original
-functional behavior. Although these methods show that parameterization
-and constraint solving can support automated model repair, their repair
-or synthesis procedures are formulated for an individual property,
-oracle, or TDT rather than a property set that must be satisfied
-simultaneously. As a result, they do not provide an iterative repair
-strategy or search optimization specifically designed for the
+properties~\cite{knapik2016smt}. TARTAR~\cite{kolbl2019clock} encodes
+the timing constraints of a TDT in linear real arithmetic and uses
+MaxSMT to generate candidate repairs with minimal changes to clock
+bounds. It then performs an admissibility
+check based on functional equivalence to determine whether a candidate
+preserves the original functional behavior. Although these methods show
+that parameterization and constraint solving can support automated model
+repair, their repair or synthesis procedures are formulated for an
+individual property or TDT rather than a property set that must be
+satisfied simultaneously. As a result, they do not provide an iterative
+repair strategy or search optimization specifically designed for the
 multi-property setting.
 
 This paper presents MPTA-Repair, an automated framework for simultaneous
