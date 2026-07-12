@@ -3,39 +3,58 @@
 
 \subsection{Overview}
 
-MPTA-Repair takes an NTA model $M$ and a property set
-$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ as input. Instead of requiring
-manual variable specification, the framework extracts repairable bounds
-from numerical clock constraints in transition guards and location
-invariants. The final output is either a repaired model $M'$
-accompanied by concrete clock-bound edits, or a failure report if no
-valid full-property repair can be synthesized within the resource
-budget.
+Let $N$ be an NTA and
+$\Phi=\{\varphi_1,\ldots,\varphi_m\}$ a set of timed safety
+properties. We write $M=(N,\Phi)$ for the repair input.
+MPTA-Repair changes only repairable numerical clock bounds in guards
+and invariants. It returns a repaired specification
+$M'=(N',\Phi)$ only when $N'$ satisfies the accepted-repair condition
+in Eq.~\eqref{eq:accepted-repair}; otherwise, it reports that no repair
+was found within the resource budget.
 
-The framework operates on a local-generation and global-validation
-principle. While each TDT drives candidate generation, validation
-remains global to ensure that fixing one violation does not introduce
-regressions elsewhere. To leverage the
-interdependence where multiple violations share identical timing
-structures, MPTA-Repair maintains a joint pool of property-trace
-constraints. This joint structure enables the framework to exploit
-relations among properties, counterexamples, and repairable bounds to
-optimize the search space and guide the MaxSMT solver toward minimal
-parameter assignments.
+The main difficulty is that the properties in $\Phi$ do not define
+independent repair tasks. Different properties may constrain the same
+clock bound, overlapping execution paths, or different stages of a
+shared timing budget. Their TDTs may also have different relations:
+some are duplicates, some share only part of a discrete path, and some
+reach different violations through the same repairable bounds.
+Consequently, an edit derived from one TDT may leave another violating
+execution feasible or invalidate a property that already holds. A
+single-property workflow that processes these TDTs independently does
+not retain their joint constraints and may repeatedly explore
+incompatible candidate edits.
 
-Operationally, each refinement round begins by verifying $M$ against
-$\Phi$ to collect TDTs for any violations. If violations are detected,
-the framework identifies active repairable bounds and constructs a joint
-MaxSMT problem from the active constraint pool. The synthesized
-parameter assignment is instantiated into a candidate model, which
-undergoes global validation via full-property regression verification
-and an admissibility check based on functional equivalence. A rejected candidate
-contributes newly exposed TDTs back into the pool to further constrain
-subsequent rounds, whereas a candidate passing both checks is returned
-as the valid repair $M'$.
-Figure~\ref{fig:mpta-repair-workflow} summarizes this
-counterexample-guided refinement loop from verification and
-relation-guided MaxSMT solving to global validation.
+MPTA-Repair uses these relations to organize the current repair
+problem before MaxSMT solving. At the property level, equivalent or
+stronger requirements are identified to avoid redundant constraints.
+At the trace level, duplicate and structurally related TDTs are grouped.
+At the repair-bound level, each property-trace constraint is mapped to
+the bounds that can affect it. Property-trace constraints that depend
+on disjoint bound sets form separate search groups, whereas constraints
+that share repairable bounds remain in the same group and are solved
+jointly. This partition reduces independent parts of the search without
+separating constraints that require coordinated edits.
+
+A trace-local repair workflow encodes one TDT, solves a MaxSMT
+instance, and validates the resulting candidate. MPTA-Repair extends
+this workflow with a shared property-trace pool, relation-guided
+selection of active constraints and bounds, and iterative refinement
+across properties. At refinement round $k$,
+$\mathcal{T}_k$ denotes the current set of property-trace pairs
+$(\tau,\varphi)$, where $\tau$ is a TDT for
+$\varphi\in\Phi$. The framework verifies $N'$ against the full property
+set, updates $\mathcal{T}_k$, constructs a joint MaxSMT problem for the
+dependent groups, and instantiates the resulting clock-bound edits in a
+candidate model.
+
+A candidate is not accepted merely because it satisfies the active
+MaxSMT constraints. It must first pass full-property regression
+verification and then the admissibility check based on functional
+equivalence. If either check fails, newly exposed TDTs are added to the
+pool and the rejected assignment is excluded from later rounds. Only a
+candidate that passes both checks is returned as $M'$.
+Figure~\ref{fig:mpta-repair-workflow} summarizes this iterative
+workflow.
 
 \begin{figure*}[t]
   \centering
@@ -65,12 +84,18 @@ a TDT
 \begin{equation}
 \begin{aligned}
   \tau ={}&
-  \ell_0 \xrightarrow{d_0,e_0} \ell_1 \cdots \\
-  &{}\xrightarrow{d_{n-1},e_{n-1}} \ell_n
+  \ell_0 \xrightarrow{d_0,\theta_0} \ell_1 \cdots \\
+  &{}\xrightarrow{d_{n-1},\theta_{n-1}} \ell_n
 \end{aligned}
 \end{equation}
-a trace path is encoded as a conjunction of linear arithmetic
-constraints:
+where $n$ is the number of discrete transitions, $d_i$ is the delay
+before the $i$th transition, and
+$\theta_i=(\ell_i,g_i,a_i,R_i,\ell_{i+1})$ is the $i$th transition.
+Let $\rho=(b'_s)_{s\in S}$ denote the modified-bound vector, and let
+$\mathbf{z}_{\tau}=(d_0,\ldots,d_{n-1},\nu_0,\ldots,\nu_n)$ collect
+the delays and clock valuations, where $\nu_i$ is the clock valuation
+at location $\ell_i$. Then the trace path is encoded as a conjunction
+of linear arithmetic constraints:
 \begin{equation}
 \begin{aligned}
   \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau})
@@ -80,7 +105,7 @@ constraints:
     d_i \ge 0
     \land \mathit{Inv}(\ell_i,\nu_i+d_i,\rho)\\
   &{}\land
-    \mathit{Guard}(e_i,\nu_i+d_i,\rho)\\
+    \mathit{Guard}(\theta_i,\nu_i+d_i,\rho)\\
   &{}\land
     \nu_{i+1}
     =
@@ -88,24 +113,19 @@ constraints:
   \Bigr)
 \end{aligned}
 \end{equation}
-Here, $\rho$ denotes the modified bounds, and $\mathbf{z}_{\tau}$
-collects the delays and clock valuations. The reset equation
+Here, $\mathit{Init}(\nu_0)$ constrains the initial clock valuation,
+$\mathit{Inv}$ evaluates the invariant $I(\ell_i)$, and
+$\mathit{Guard}$ evaluates the guard $g_i$ of transition $\theta_i$
+under the given valuation and modified bounds. The reset equation
 $\nu_{i+1}=\mathit{Reset}(\nu_i+d_i,R_i)$ updates the valuation after
-transition $e_i$ by resetting clocks in $R_i$ and preserving the others.
-The original violation encoding combines path executability with the
-final property violation:
-\begin{equation}
-  \operatorname{Enc}(\tau,\varphi,\rho)
-  =
-  \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau})
-  \land
-  \mathit{Bad}_{\varphi}(\ell_n,\nu_n)
-\end{equation}
+transition $\theta_i$ by resetting clocks in $R_i$ and preserving the
+others.
 The predicate $\mathit{Bad}_{\varphi}(\ell_n,\nu_n)$ characterizes the
 violation state of $\varphi$ at the final location. To block this
 violating behavior while preserving executability of the discrete path
-skeleton, the single-trace repair constraint uses two copies of the
-trace variables:
+skeleton, the single-trace repair constraint uses two disjoint copies
+$\mathbf{z}_{\tau}^{+}$ and $\mathbf{z}_{\tau}^{-}$ of the delay and
+clock-valuation variables:
 \begin{equation}
 \begin{aligned}
   &\Psi_{\tau,\varphi}^{\mathrm{repair}}(\rho)
@@ -117,7 +137,7 @@ trace variables:
   \Bigl(
     \operatorname{Path}(\tau,\rho,\mathbf{z}_{\tau}^{-}) \\
   &\qquad{}\land
-    \mathit{Bad}_{\varphi}(\ell_n^{-},\nu_n^{-})
+    \mathit{Bad}_{\varphi}(\ell_n,\nu_n^{-})
   \Bigr)
 \end{aligned}
 \end{equation}
@@ -132,11 +152,12 @@ currently violated properties are accumulated into a trace pool
 \begin{equation}
   \mathcal{T}_k=\{(\tau_j,\varphi_j)\}_{j=1}^{m_k}
 \end{equation}
-MPTA-Repair assembles a joint MaxSMT problem with the constraint system
-defined as
+where $m_k=|\mathcal{T}_k|$ is the number of property-trace pairs in
+the pool at round $k$. MPTA-Repair assembles a joint MaxSMT problem with
+the constraint system defined as
 \begin{equation}
 \begin{aligned}
-  \Phi_k(\rho)
+  \mathcal{F}_k(\rho)
   =
   &\mathit{Dom}(\rho)
   \land \mathit{Block}_k(\rho) \\
@@ -146,20 +167,25 @@ defined as
 \end{aligned}
 \end{equation}
 Here, $\mathit{Dom}(\rho)$ enforces static interval consistency and
-domain limits, such as $b'_s\ge 0$, and
-$\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset of traces
-obtained after relation-aware filtering. When an instantiated candidate
-model fails verification, the constraint system is updated
+domain limits, such as $b'_s\ge 0$; $\mathit{Block}_k(\rho)$ collects
+the blocking clauses accumulated before round $k$ and is initially
+true; and $\mathit{Select}(\mathcal{T}_k)$ represents a reduced subset
+of traces obtained after relation-aware filtering. When an instantiated
+candidate NTA fails verification, the constraint system is updated
 incrementally. The framework expands the pool via
 \begin{equation}
   \mathcal{T}_{k+1}
   =
   \mathcal{T}_k
   \cup
-  \mathit{NewTDTs}(M(\rho_k),\Phi)
+  \mathit{NewTDTs}(N(\rho_k),\Phi)
 \end{equation}
-and updates the search-space block to exclude the failed assignment
-$\rho_k$ over the set of repairable bounds $S$:
+where $\rho_k$ is the modified-bound assignment produced in round $k$,
+$N(\rho_k)$ is the candidate network obtained by applying $\rho_k$ to
+$N$, and $\mathit{NewTDTs}(N(\rho_k),\Phi)$ is the set of newly exposed
+property-trace pairs returned by full-property verification. The
+framework then updates the search-space block to exclude the failed
+assignment $\rho_k$ over the set of repairable bounds $S$:
 \begin{equation}
   \mathit{Block}_{k+1}(\rho)
   =
@@ -206,11 +232,11 @@ guide the search; correctness is still guaranteed through full-property
 regression verification and an admissibility check.
 
 At the property layer, timed safety properties are normalized into an
-$\mathtt{A}[]$ fragment over location predicates and clock or integer
+$\texttt{A[]}$ fragment over location predicates and clock or integer
 constraints. Equivalence is detected by the syntactic identity of
 normalized forms, while dominance is evaluated under logical
-subsumption, e.g., $\mathtt{A}[]\, x \le 5$ subsumes
-$\mathtt{A}[]\, x \le 10$ within the same structural context.
+subsumption, e.g., $\texttt{A[]}\, x \le 5$ subsumes
+$\texttt{A[]}\, x \le 10$ within the same structural context.
 MPTA-Repair then retains only the stronger properties for solving to
 optimize efficiency.
 
@@ -230,32 +256,3 @@ relevant to the current counterexample pool and ranks them for candidate
 generation. Bounds with higher relational scores are prioritized
 because their modifications are more likely to satisfy the joint
 constraint system.
-
-\subsection{Validation, Admissibility, and Refinement}
-
-In MPTA-Repair, candidate validation determines whether a generated edit
-set can be accepted as a repair. After a candidate edit set is
-generated, the repaired model is verified against the entire property
-set $\Phi$. If a candidate resolves the observed violation but induces
-new violations against the specification, it is rejected, indicating
-that the current property-trace pool is insufficient. MPTA-Repair then
-extracts the newly observed TDTs and appends them to the pool, guiding
-the subsequent refinement round.
-
-Candidates that pass full-property regression verification are further
-evaluated against an admissibility check based on functional equivalence
-\cite{kolbl2019clock}. This step ensures that clock-bound
-modifications do not satisfy properties in ways that fail to preserve
-the original functional behavior. Rather than enforcing timed-language equivalence,
-which would conflict with the goal of eliminating violating timed paths,
-the check is performed by constructing untimed automata from both the
-original and repaired models and comparing their accepted untimed
-languages \cite{hopcroft2001automata}. A candidate is rejected if it
-adds or removes discrete functional paths, ensuring that only timing
-characteristics are modified.
-
-The refinement loop therefore combines local candidate generation with
-global validation. Local MaxSMT formulations propose candidate
-assignments, full-property regression verification ensures complete
-specification compliance, and the admissibility check preserves the
-original functional behavior.
