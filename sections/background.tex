@@ -33,9 +33,9 @@ An NTA specification consists of a network of timed automata and the
 properties that the network must satisfy:
 \begin{equation}
 \begin{aligned}
-  M &= (N,\Phi),\\
-  N &= T_1\parallel\cdots\parallel T_k,\\
-  \Phi &= \{\varphi_1,\ldots,\varphi_m\}.
+M &= (N,\Phi),\\
+N &= T_1\parallel\cdots\parallel T_k,\\
+\Phi &= \{\varphi_1,\ldots,\varphi_m\}.
 \end{aligned}
 \label{eq:nta-property-set}
 \end{equation}
@@ -44,17 +44,22 @@ interacting timed automata, with synchronization semantics supplied by
 the target modeling language, such as UPPAAL~\cite{larsen1997uppaal}.
 The property set $\Phi$ is part of the system specification: it states
 the timing and behavioral requirements that the NTA must satisfy. For
-convenience, $N\models\Phi$ denotes that every property in
-$\Phi$ holds over the reachable states of $N$.
+convenience, the satisfaction of the property set is defined as
+\begin{equation}
+N\models\Phi
+\quad\Longleftrightarrow\quad
+\forall\varphi_i\in\Phi,\; N\models\varphi_i.
+\label{eq:property-set-satisfaction}
+\end{equation}
 
 The repair problem considered here is restricted to timed safety
-properties, which require a state predicate to hold over all reachable
-states. In UPPAAL-style notation, such properties often have the
-invariant form $\texttt{A[]}\,p$, where $p$ may combine location
-predicates, data predicates, and clock constraints. Clocks are central
-to timed safety properties because deadlines, timeouts, durations, and
-earliest or latest event times are expressed by numerical bounds over
-clock values.
+properties, which require a state predicate to hold in every reachable
+state. In UPPAAL-style notation, such a property has the invariant form
+$\texttt{A[]}\,p$, where $p$ is a state predicate composed of location
+predicates and clock constraints. For example,
+$\texttt{A[]}\,(\texttt{Controller.Waiting}\ \texttt{imply}\ x\leq 10)$
+requires that clock $x$ never exceed 10 while the controller is in the
+\texttt{Waiting} location.
 
 \subsection{Timed Diagnostic Traces and Accepted Repairs}
 
