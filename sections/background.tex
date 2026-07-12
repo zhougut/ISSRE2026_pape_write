@@ -68,10 +68,12 @@ requires that clock $x$ never exceed 10 while the controller is in the
 Given an NTA specification $M=(N,\Phi)$ and a
 property $\varphi\in\Phi$, a timed diagnostic trace (TDT) for
 $\varphi$ is a feasible finite timed execution of $N$ that
-reaches a state violating $\varphi$. In practice, a TDT is returned by
-a model checker when verification of $\varphi$ fails. It records the
-relevant locations and transitions, guards and invariants, clock resets,
-timing information such as delays or zones, and the violation point.
+reaches a state violating $\varphi$.
+When verification of $\varphi$ fails, a real-time model checker can
+generate a TDT as a counterexample. In UPPAAL, such a counterexample
+consists of a sequence of states and transitions, together with clock
+constraints describing the associated timing
+information~\cite{larsen1997uppaal}.
 
 In MPTA-Repair, each TDT is treated as a property-trace constraint:
 the violated property identifies the requirement to be restored, and
@@ -81,19 +83,20 @@ multiple properties in a joint solving process.
 
 \subsection{Functional Equivalence and Repair Acceptance}
 
-\noindent\textbf{Definition 4 (Untimed functional equivalence).}
-For an NTA $N$, let $L_\mu(N)$ denote the untimed
-language obtained by abstracting from delays while preserving the
-discrete action or transition behavior feasible under the timing
-constraints. Two NTA models $N_1$ and $N_2$ are
-untimed functionally equivalent if
+Following TARTAR~\cite{kolbl2019clock}, we adopt equality of untimed
+languages as the criterion for functional equivalence. Under this
+criterion, a timing repair should neither remove existing functional
+behavior of the original model nor introduce new functional behavior,
+even though it changes timing constraints to eliminate violations.
+
+\noindent\textbf{Definition 4 (Functional equivalence).}
+For an NTA $N$, let $L_\mu(N)$ denote the untimed language obtained by
+abstracting from delays while preserving the discrete behavior feasible
+under the timing constraints. Two NTA models $N_1$ and $N_2$ are
+functionally equivalent if
 \begin{equation}
-    L_\mu(N_1)=L_\mu(N_2).
+L_\mu(N_1)=L_\mu(N_2).
 \end{equation}
-This notion follows the functional-equivalence criterion used for
-clock-bound repair~\cite{kolbl2019clock}: a timing repair should not
-remove intended discrete behavior or add new discrete behavior, even
-though it changes timing constraints to eliminate violations.
 
 \noindent\textbf{Definition 5 (Accepted repair).}
 Let $M_{\mathit{bad}}=(N_{\mathit{bad}},\Phi)$ be
