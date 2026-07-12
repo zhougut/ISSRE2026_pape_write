@@ -100,10 +100,10 @@ L_\mu(N_1)=L_\mu(N_2).
 
 \noindent\textbf{Definition 5 (Accepted repair).}
 Let $M_{\mathit{bad}}=(N_{\mathit{bad}},\Phi)$ be
-a faulty NTA specification. A candidate repaired model
-$M_{\mathit{rep}}=(N_{\mathit{rep}},\Phi)$ is
-obtained by changing only repairable clock-bound occurrences in guards
-and invariants. The candidate is accepted as a repair only if
+a faulty NTA specification. A candidate repair
+$M_{\mathit{rep}}=(N_{\mathit{rep}},\Phi)$ is obtained by changing only
+repairable clock bounds in guards and invariants. The candidate is
+accepted as a repair if and only if
 \begin{equation}
   N_{\mathit{rep}}
   \models
@@ -115,7 +115,7 @@ and invariants. The candidate is accepted as a repair only if
   \label{eq:accepted-repair}
 \end{equation}
 The first conjunct corresponds to full-property regression verification:
-the repaired model must satisfy the entire property set, not only the
+the model must satisfy the entire property set, not only the
 property that produced the current TDT. The second conjunct is the
 admissibility check based on untimed functional equivalence; it prevents
 repairs that make properties true by disabling required functional
