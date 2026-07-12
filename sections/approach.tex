@@ -24,6 +24,13 @@ single-property workflow that processes these TDTs independently does
 not retain their joint constraints and may repeatedly explore
 incompatible candidate edits.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\columnwidth]{MPTA_Repair_overview_small_figure.pdf}
+  \caption{Overview of the MPTA-Repair workflow.}
+  \label{fig:mpta-repair-workflow-small}
+\end{figure}
+
 MPTA-Repair uses these relations to organize the current repair
 problem before MaxSMT solving. At the property level, equivalent or
 stronger requirements are identified to avoid redundant constraints.
