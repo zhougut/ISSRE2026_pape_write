@@ -199,16 +199,18 @@ group, and rank constraints and repair variables. These heuristics only
 guide the search; correctness is still guaranteed through full-property
 regression verification and an admissibility check.
 
-At the property layer, MPTA-Repair groups timed safety properties by
-the state predicates and clock constraints in their $(\texttt{A[]},p)$
-queries. Identical query expressions are treated as duplicates. Queries
-with the same state predicate, clock, and comparison operator but
-different numerical bounds are placed in one group, and tighter bounds
-are prioritized during constraint selection; e.g.,
-$(\texttt{A[]}, P \Rightarrow x \le 5)$ is processed before
-$(\texttt{A[]}, P \Rightarrow x \le 10)$. This priority only guides the
-active constraint set; all properties remain in $\Phi$ and are checked
-during full-property regression verification.
+At the property layer, MPTA-Repair groups timed safety properties
+according to the state predicates and clock constraints appearing in
+their $(\texttt{A[]},p)$ queries. Properties with identical query
+expressions are treated as duplicates. Properties that refer to the same
+state predicate, clock, and comparison operator but contain different
+numerical bounds are placed in the same group, with the tighter bound
+given higher priority during constraint selection. For example,
+$(\texttt{A[]},(P \Rightarrow x \le 5))$ is processed before
+$(\texttt{A[]},(P \Rightarrow x \le 10))$. This priority is used only to
+guide the construction of the active constraint set; all properties
+remain in $\Phi$ and are checked during full-property regression
+verification.
 
 At the counterexample layer, MPTA-Repair maintains a TDT pool indexed by
 violated properties. Exact duplicates are removed, and the remaining
