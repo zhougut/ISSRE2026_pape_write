@@ -27,21 +27,24 @@ conflicting repairs.
 \end{figure}
 
 Figure~\ref{fig:mpta-repair-workflow-small} summarizes the MPTA-Repair
-workflow. Initial full-property verification either confirms that no
-repair is needed or initializes a shared property-trace pool with TDTs.
+framework. Initial full-property verification either confirms that no
+repair is needed or initializes a joint property-trace constraint pool
+with TDTs.
 MPTA-Repair analyzes relations among properties, TDTs, and repairable
 bounds, removes redundant constraints, and solves constraints that share
-bounds jointly. The selected constraints are encoded as a MaxSMT
+bounds jointly. The constraints are encoded as a MaxSMT
 problem, and the resulting assignment is applied to $N$ to construct a
-candidate model. Building on TARTAR's MaxSMT repair core, MPTA-Repair adds
-relation-guided optimization, full-property regression, and a feedback
-loop that returns newly found TDTs to the shared pool.
+candidate model. MPTA-Repair extends TARTAR's single-TDT MaxSMT repair
+procedure~\cite{kolbl2019clock} by jointly processing related
+constraints and using newly generated TDTs in subsequent repair
+iterations.
 
 Each candidate undergoes full-property regression verification and the
-admissibility check based on functional equivalence. Failed regression
-adds new TDTs to the shared pool, and rejected assignments are excluded
-from later rounds. The process repeats until an accepted repair is found
-or the resource budget is exhausted.
+admissibility check based on functional equivalence. If regression
+verification reveals new violations, the corresponding TDTs are added to
+the joint pool. Any assignment that fails either validation step is
+excluded from subsequent iterations. The process repeats until an
+accepted repair is found or the resource budget is exhausted.
 Figure~\ref{fig:mpta-repair-workflow} details the relation analysis,
 MaxSMT solving, and validation stages.
 
