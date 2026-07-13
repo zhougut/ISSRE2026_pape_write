@@ -223,22 +223,30 @@ properties remain in $\Phi$ for full-property regression verification,
 and a constraint is removed from the active encoding only when it is a
 duplicate or logically implied by another active constraint.
 
-The optimization objective is governed by a hierarchical set of soft
-constraints. MPTA-Repair uses a lexicographic objective that first
-favors small repairs and then incorporates risk- and coverage-based
-priorities:
+The relation analysis and QE caching described above reduce the cost of
+constructing and solving the MaxSMT problem in each refinement round.
+Within the resulting search space, MPTA-Repair further optimizes the
+candidate repair by minimizing its deviation from the original NTA.
+Among the assignments satisfying the current joint constraint system,
+it uses the following lexicographic objective:
 \begin{equation}
-\operatorname*{lex\,min}_{\rho}
+\operatorname*{lex\,min}_{\rho\in\Omega_k}
 \left(
 \begin{aligned}
-  &\sum_{s\in S}\mathbf{1}\{\delta_s \ne 0\},\\
-  &\sum_{s\in S}|\delta_s|,\\
-  &\sum_{s\in S} \mathit{risk}_s \cdot \mathbf{1}\{\delta_s \ne 0\},\\
-  &-\sum_{s\in S} \mathit{benefit}_s \cdot \mathbf{1}\{\delta_s \ne 0\}
+&\sum_{s\in S}\mathbf{1}\{\delta_s \ne 0\},\\
+&\sum_{s\in S}|\delta_s|,\\
+&\sum_{s\in S}\mathit{risk}_s
+\cdot\mathbf{1}\{\delta_s \ne 0\},\\
+&-\sum_{s\in S}\mathit{benefit}_s
+\cdot\mathbf{1}\{\delta_s \ne 0\}
 \end{aligned}
-\right)
+\right),
 \end{equation}
-Here, $\mathbf{1}\{\cdot\}$ is the indicator function. The first two
-objectives minimize the number and total magnitude of altered clock
-bounds. The last two terms penalize high-risk edits and prioritize
-bounds covering more violated traces.
+where $\Omega_k$ is the feasible assignment space defined by the current
+joint constraint system, and $\mathbf{1}\{\cdot\}$ is the indicator
+function. The first objective minimizes the number of modified
+clock-bound occurrences, and the second minimizes their total variation,
+keeping the repaired bounds close to those of the original NTA. The last
+two objectives are lower-priority criteria that avoid high-risk
+modifications and prefer bounds associated with more violated traces;
+they do not override the first two minimality objectives.
