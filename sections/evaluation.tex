@@ -64,12 +64,15 @@ the iterative TARTAR-style baseline and its remaining failures?
 
 \noindent\textbf{RQ1: Dataset and mutation characteristics.}
 Table~\ref{tab:dataset-statistics} shows that the benchmark dataset
-contains more original models, whereas the industrial dataset is larger
-per model and has more properties per model. The benchmark models have
-an average of 30.56 locations and 52.67 transitions, while the
-industrial models have 57.80 locations and 91.80 transitions on
-average. The retained mutants therefore cover both localized benchmark
-faults and more tightly coupled industrial timing faults.
+contains nine original models and 54 retained mutants, whereas the
+industrial dataset contains five original models and 105 retained
+mutants. Although the benchmark dataset includes more original models,
+the industrial models are structurally larger and have more properties
+per model. On average, the benchmark models contain 30.56 locations,
+52.67 transitions, and 4.1 properties, compared with 57.80 locations,
+91.80 transitions, and 7.3 properties for the industrial models. The
+resulting repair instances therefore cover both smaller benchmark
+models and larger industrial models with broader property sets.
 
 \input{tables/overall-results}
 
