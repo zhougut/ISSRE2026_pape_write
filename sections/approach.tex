@@ -234,11 +234,7 @@ it uses the following lexicographic objective:
 \left(
 \begin{aligned}
 &\sum_{s\in S}\mathbf{1}\{\delta_s \ne 0\},\\
-&\sum_{s\in S}|\delta_s|,\\
-&\sum_{s\in S}\mathit{risk}_s
-\cdot\mathbf{1}\{\delta_s \ne 0\},\\
-&-\sum_{s\in S}\mathit{benefit}_s
-\cdot\mathbf{1}\{\delta_s \ne 0\}
+&\sum_{s\in S}|\delta_s|
 \end{aligned}
 \right),
 \end{equation}
@@ -246,7 +242,4 @@ where $\Omega_k$ is the feasible assignment space defined by the current
 joint constraint system, and $\mathbf{1}\{\cdot\}$ is the indicator
 function. The first objective minimizes the number of modified
 clock-bound occurrences, and the second minimizes their total variation,
-keeping the repaired bounds close to those of the original NTA. The last
-two objectives are lower-priority criteria that avoid high-risk
-modifications and prefer bounds associated with more violated traces;
-they do not override the first two minimality objectives.
+keeping the repaired bounds close to those of the original NTA.
