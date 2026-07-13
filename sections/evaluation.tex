@@ -77,15 +77,26 @@ models and larger industrial models with broader property sets.
 \input{tables/overall-results}
 
 \noindent\textbf{RQ2: Accepted-repair rate.}
-Table~\ref{tab:overall-results} shows that MPTA-Repair outperforms the
-iterative baseline on both datasets. On the benchmark dataset, the
-baseline repairs 39 of 54 faulty instances, achieving a 72\% success
-rate, whereas MPTA-Repair repairs 50 instances and reaches 93\%. The
-gap is larger on the industrial dataset: the baseline repairs 21 of 105
-instances, while MPTA-Repair repairs 80, improving the success rate from
-20\% to 76\%. This result indicates that joint property-trace candidate
-generation is especially useful when timing constraints and properties
-are tightly coupled.
+Table~\ref{tab:overall-results} shows that MPTA-Repair achieves higher
+accepted-repair rates than the iterative baseline on both datasets. On
+the benchmark dataset, the baseline produces accepted repairs for 39 of
+54 instances, corresponding to a success rate of 72\%, whereas
+MPTA-Repair repairs 50 instances and reaches 93\%, an increase of 21
+percentage points. On the industrial dataset, the baseline repairs 21
+of 105 instances, while MPTA-Repair repairs 80, corresponding to
+success rates of 20\% and 76\%, respectively. The improvement is
+therefore substantially larger on the industrial dataset.
+
+The average repair time should be interpreted together with the success
+rate. On the benchmark dataset, MPTA-Repair is both more successful and
+faster on average. On the industrial dataset, MPTA-Repair takes longer
+than the baseline because it continues exploring joint repairs for
+multiple properties and TDTs. The baseline often terminates earlier
+after failing to find a valid candidate repair, which lowers its average
+time but also leads to a much lower accepted-repair rate. This result
+indicates that joint property-trace solving is especially useful for
+industrial models, where timing constraints are more tightly coupled
+and changing one clock bound may affect several properties at once.
 
 \input{tables/search-optimization-results}
 
