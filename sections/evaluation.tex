@@ -10,9 +10,8 @@ iterative baseline adapted from TARTAR
 
 \subsection{Evaluation Setup and Research Questions}
 
-We evaluate MPTA-Repair on two datasets, summarized in
-Table~\ref{tab:dataset-statistics}. The benchmark dataset includes nine
-benchmark models selected from UPPAAL examples
+We evaluate MPTA-Repair on two datasets. The benchmark dataset includes
+nine benchmark models selected from UPPAAL examples
 \cite{behrmann2004tutorial} and the XtaBenchmarkSuite
 \cite{farkas2018benchmarks}, such as Elevator and FDDI. The industrial
 dataset constructed in this work contains five closely coupled NTA
@@ -25,6 +24,17 @@ medical pacing \cite{jiang2010heart}. Compared with the benchmark
 models, these case studies involve more tightly coupled timing
 constraints across multiple properties.
 
+Since real-world NTA models with labeled clock-bound faults are
+difficult to obtain, we synthesize faulty instances using mutation
+\cite{jia2011mutation}. Some collected models contain few or no
+properties, so we supplement them with timed safety properties described
+or implied by their design documents or related papers. For each model,
+we seed modifications to all clock-constraint bounds by
+$\{-10,-1,+1,+0.1M,+M\}$, where $M$ is the maximal bound compared
+against a clock in that model. We retain only mutants that are
+syntactically valid, violate at least one timed safety property, and
+preserve the original functional behavior.
+
 \input{tables/dataset-statistics}
 
 Table~\ref{tab:dataset-statistics} characterizes the original models
@@ -36,16 +46,7 @@ is larger per model: 57.80 locations, 91.80 transitions, and 7.3
 properties on average, compared with 30.56 locations, 52.67
 transitions, and 4.1 properties for the benchmark dataset.
 
-Since real-world NTA models with labeled clock-bound faults are
-difficult to obtain, we synthesize faulty instances using mutation
-\cite{jia2011mutation}. Some collected models contain few or no
-properties, so we supplement them with timed safety properties described
-or implied by their design documents or related papers. For each model,
-we seed modifications to all clock-constraint bounds by
-$\{-10,-1,+1,+0.1M,+M\}$, where $M$ is the maximal bound compared
-against a clock in that model. We retain only mutants that are
-syntactically valid, violate at least one timed safety property, and
-preserve the original functional behavior. Each repair instance is
+Each repair instance is
 executed with a 10-minute timeout for both MPTA-Repair and the baseline.
 
 The iterative baseline adapted from TARTAR \cite{kolbl2019clock}
