@@ -34,12 +34,12 @@ properties, so we supplement them with timed safety properties described
 or implied by their design documents or related papers. For each model,
 we seed modifications to all clock-constraint bounds by
 $\{-10,-1,+1,+0.1M,+M\}$, where $M$ is the maximal bound compared
-against a clock in that model. Because the joint repair search space can
-grow quickly, each mutant randomly modifies at most two clock-bound
-occurrences. We retain only mutants that are syntactically valid,
-violate at least one timed safety property, and preserve the original
-functional behavior. Each repair instance is executed with a 10-minute
-timeout for both MPTA-Repair and the baseline.
+against a clock in that model; because the combination space of
+mutations is large, each mutant randomly modifies at most two
+clock-bound occurrences. We retain only mutants that are syntactically
+valid, violate at least one timed safety property, and preserve the
+original functional behavior. Each repair instance is executed with a
+10-minute timeout for both MPTA-Repair and the baseline.
 
 The iterative baseline adapted from TARTAR \cite{kolbl2019clock}
 repairs one violated property and its TDT at a time. If validation
