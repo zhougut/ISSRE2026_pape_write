@@ -199,35 +199,24 @@ rank repairable bounds. These heuristics only
 guide the search; correctness is still guaranteed through full-property
 regression verification and an admissibility check.
 
-At the property layer, MPTA-Repair groups timed safety properties
-according to the state predicates and clock constraints appearing in
-their $(\texttt{A[]},p)$ queries. Properties with identical query
-expressions are treated as duplicates. Properties that refer to the same
-state predicate, clock, and comparison operator but contain different
-numerical bounds are placed in the same group, with the tighter bound
-given higher priority during constraint selection. For example,
-$(\texttt{A[]},(P \Rightarrow x \le 5))$ is processed before
-$(\texttt{A[]},(P \Rightarrow x \le 10))$. This priority is used only to
-guide the construction of the active constraint set; all properties
-remain in $\Phi$ and are checked during full-property regression
-verification.
-
-At the counterexample layer, MPTA-Repair maintains a TDT pool indexed by
-violated properties. Exact duplicates are removed, and the remaining
-traces are annotated with traversed transitions, visited locations,
-active clocks, and guard or invariant bounds. Traces with identical
-discrete transition sequences or overlapping clock zones are grouped to
-reveal common bottlenecks. A trace constraint is omitted from the active
-encoding only when it is an exact duplicate or soundly subsumed by an
-encoded trace constraint.
-
-At the repair-bound layer, MPTA-Repair maps each active property-trace
-constraint to the clock bounds occurring in or affecting its encoding.
-This mapping restricts active MaxSMT decision variables to bounds
-relevant to the current counterexample pool and ranks them for candidate
-generation. Bounds with higher relational scores are prioritized
-because their modifications are more likely to satisfy the joint
-constraint system.
+MPTA-Repair analyzes relations at the property, counterexample, and
+repair-bound levels to reduce and organize the active MaxSMT problem.
+Timed safety properties are grouped according to the state predicates
+and clock constraints appearing in their $(\texttt{A[]},p)$ queries;
+identical queries are treated as duplicates, while tighter bounds are
+given higher priority among properties with the same structure. Each
+TDT is stored together with the property it violates, and
+property-trace pairs that share transitions or repair variables are
+grouped for joint solving. The framework then maps each active
+property-trace constraint to the repairable clock-bound occurrences in
+its encoding. A bound is given higher priority if it occurs in newly
+added TDTs or is associated with more TDTs and violated properties. This
+ranking guides active variable selection and candidate generation,
+whereas the number and magnitude of clock-bound changes are handled by
+the MaxSMT optimization objective. All properties remain in $\Phi$ for
+full-property regression verification, and a constraint is removed from
+the active encoding only when it is a duplicate or logically implied by
+another active constraint.
 
 In iterative solving, MPTA-Repair caches trace-level quantifier
 elimination (QE). For each property-trace pair, it eliminates the delay
