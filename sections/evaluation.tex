@@ -14,7 +14,7 @@ We evaluate MPTA-Repair on two datasets. The benchmark dataset includes
 nine benchmark models selected from UPPAAL examples
 \cite{behrmann2004tutorial} and the XtaBenchmarkSuite
 \cite{farkas2018benchmarks}, such as Elevator and FDDI. The industrial
-dataset constructed in this work contains five closely coupled NTA
+dataset constructed in this work contains five NTA
 case-study models: Gear Control System for automotive transmission
 \cite{lindahl1998gear}, SAE-RoR for autonomous-vehicle road-junction rules
 \cite{alves2021double}, Train Controller Alarm for railway emergency
@@ -98,13 +98,17 @@ condition, it affects efficiency rather than repair effectiveness.
 
 \noindent\textbf{RQ3: Practical lessons and failure analysis.}
 The industrial cases show that accepted repairs require both global
-property checking and functional admissibility. A candidate that blocks
-one TDT may still violate another property, while a bound edit may
-satisfy timing properties only by removing intended behavior.
-MPTA-Repair rejects such candidates through full-property regression and
-functional-equivalence checking. This also explains its advantage over
-the iterative TARTAR baseline: local single-TDT repairs often fail
-on coupled industrial models, whereas the joint pool captures shared
-timing constraints. Remaining failures mainly occur when no admissible
-candidate is found within the time budget, as in Pacemaker, where dense
-timing interactions enlarge the clock-bound repair space.
+property checking and functional admissibility. As shown in
+Table~\ref{tab:search-optimization-results}, industrial repairs still
+require 1.40 iterations on average after optimization, and 2.20 without
+optimization, indicating that many instances cannot be repaired by the
+first candidate. A candidate that blocks one TDT may still violate
+another property, while a bound edit may satisfy timing properties only
+by removing intended behavior. MPTA-Repair rejects such candidates
+through full-property regression and functional-equivalence checking.
+This also explains its advantage over the iterative TARTAR baseline:
+local single-TDT repairs often fail on coupled industrial models,
+whereas the joint pool captures shared timing constraints. Remaining
+failures mainly occur when no admissible candidate is found within the
+time budget, as in Pacemaker, where dense timing interactions enlarge
+the clock-bound repair space.
