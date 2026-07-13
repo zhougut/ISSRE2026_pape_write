@@ -211,21 +211,17 @@ grouped for joint solving. The framework then maps each active
 property-trace constraint to the repairable clock-bound occurrences in
 its encoding. A bound is given higher priority if it occurs in newly
 added TDTs or is associated with more TDTs and violated properties. This
-ranking guides active variable selection and candidate generation,
+ranking guides active-variable selection and candidate generation,
 whereas the number and magnitude of clock-bound changes are handled by
-the MaxSMT optimization objective. All properties remain in $\Phi$ for
-full-property regression verification, and a constraint is removed from
-the active encoding only when it is a duplicate or logically implied by
-another active constraint.
-
-In iterative solving, MPTA-Repair caches trace-level quantifier
-elimination (QE). For each property-trace pair, it eliminates the delay
-and trace-local clock variables in
-$\Psi_{\tau,\varphi}^{\mathrm{repair}}(\rho)$ and memoizes the resulting
-quantifier-free obligation using the trace, property, and repair-space
-configuration as the key. Later rounds reuse cached obligations for old
-TDTs and invoke QE only for newly discovered pairs; blocking clauses over
-$\rho$ are added after QE and do not invalidate the cache.
+the MaxSMT optimization objective. To avoid repeated encoding across
+iterations, MPTA-Repair applies quantifier elimination (QE) to each
+property-trace constraint, eliminating its delay and trace-local clock
+variables to obtain a quantifier-free constraint over the repair
+variables. The resulting constraint is cached and reused in later
+rounds, so QE is required only for newly added property-trace pairs. All
+properties remain in $\Phi$ for full-property regression verification,
+and a constraint is removed from the active encoding only when it is a
+duplicate or logically implied by another active constraint.
 
 The optimization objective is governed by a hierarchical set of soft
 constraints. MPTA-Repair uses a lexicographic objective that first
