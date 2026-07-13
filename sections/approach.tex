@@ -51,7 +51,7 @@ MaxSMT solving, and validation stages.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.86\textwidth]{MPTA_Repair_overview.pdf}
-  \caption{Overview of the MPTA-Repair workflow.}
+  \caption{Overview of the MPTA-Repair framework.}
   \label{fig:mpta-repair-workflow}
 \end{figure*}
 
@@ -194,41 +194,36 @@ $\delta_s$ in round $k$.
 During refinement, accumulating violated properties, TDTs, and
 repairable bounds increases the size and complexity of the MaxSMT
 problem. To improve solving efficiency, MPTA-Repair uses
-relation-guided optimization to filter and group constraints, and to
-rank repairable bounds. These heuristics only
-guide the search; correctness is still guaranteed through full-property
-regression verification and an admissibility check.
+relation-guided optimization to filter and group constraints and rank
+repairable bounds. These heuristics guide only the search; correctness
+is still guaranteed through full-property regression verification and an
+admissibility check.
 
 MPTA-Repair analyzes relations at the property, counterexample, and
-repair-bound levels to reduce and organize the active MaxSMT problem.
-Timed safety properties are grouped according to the state predicates
-and clock constraints appearing in their $(\texttt{A[]},p)$ queries;
+repair-bound levels. Timed safety properties are grouped by the state
+predicates and clock constraints in their $(\texttt{A[]},p)$ queries;
 identical queries are treated as duplicates, while tighter bounds are
 given higher priority among properties with the same structure. Each
-TDT is stored together with the property it violates, and
-property-trace pairs that share transitions or repair variables are
-grouped for joint solving. The framework then maps each active
-property-trace constraint to the repairable clock-bound occurrences in
-its encoding. A bound is given higher priority if it occurs in newly
-added TDTs or is associated with more TDTs and violated properties. This
-ranking guides active-variable selection and candidate generation,
-whereas the number and magnitude of clock-bound changes are handled by
-the MaxSMT optimization objective. To avoid repeated encoding across
-iterations, MPTA-Repair applies quantifier elimination (QE) to each
-property-trace constraint, eliminating its delay and trace-local clock
-variables to obtain a quantifier-free constraint over the repair
-variables. The resulting constraint is cached and reused in later
-rounds, so QE is required only for newly added property-trace pairs. All
-properties remain in $\Phi$ for full-property regression verification,
-and a constraint is removed from the active encoding only when it is a
-duplicate or logically implied by another active constraint.
+TDT is stored with the property it violates, and property-trace pairs
+sharing transitions or repair variables are grouped for joint solving.
+Each active property-trace constraint is then mapped to the repairable
+clock-bound occurrences in its encoding. Bounds occurring in newly
+added TDTs or associated with more TDTs and violated properties are
+prioritized. This ranking guides active-variable selection and
+candidate generation, whereas the number and magnitude of clock-bound
+changes are handled by the MaxSMT optimization objective.
 
-The relation analysis and QE caching described above reduce the cost of
-constructing and solving the MaxSMT problem in each refinement round.
-Within the resulting search space, MPTA-Repair further optimizes the
-candidate repair by minimizing its deviation from the original NTA.
-Among the assignments satisfying the current joint constraint system,
-it uses the following lexicographic objective:
+To avoid repeated encoding across iterations, MPTA-Repair applies
+quantifier elimination (QE) to each property-trace constraint,
+eliminating its delay and trace-local clock variables to obtain a
+quantifier-free constraint over the repair variables. The resulting
+constraint is cached and reused in later rounds, so QE is required only
+for newly added property-trace pairs. All properties remain in $\Phi$
+for full-property regression verification, and a constraint is removed
+from the active encoding only when it is a duplicate or logically
+implied by another active constraint. Within this reduced search space,
+MPTA-Repair minimizes deviation from the original NTA using the
+following lexicographic objective:
 \begin{equation}
 \operatorname*{lex\,min}_{\rho\in\Omega_k}
 \left(

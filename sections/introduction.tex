@@ -20,9 +20,11 @@ liveness requirements
 Among the properties checked for an NTA, this work focuses on timed
 safety properties, which are fundamental and important for specifying
 bounded timing requirements, such as deadlines, limits on waiting times,
-and valid execution durations. Violations of such properties can be
+and valid execution durations
+~\cite{konrad2005realtime,vogel2022patterns}. Violations of such properties can be
 witnessed by finite timed executions, which provide concrete evidence
-for subsequent repair analysis~\cite{kolbl2019clock,vogel2022patterns}.
+for subsequent repair analysis
+~\cite{kupferman2001model,kolbl2019clock,vogel2022patterns}.
 In complex NTAs, multiple real-valued clocks advance simultaneously, and
 their constraints determine transition occurrence and residence time. An
 incorrect numerical clock bound may therefore affect executions across
@@ -44,14 +46,14 @@ simultaneously: a candidate clock-bound change may resolve one TDT but
 leave other violations, make a previously satisfied property fail, or
 compromise functional behavior. Therefore, a candidate repair must be
 validated against the full property set and checked for admissibility
-based on functional equivalence.
+based on functional equivalence~\cite{kolbl2021automated}.
 
 Parameterization and constraint solving provide a general basis for
 repairing timing constraints in timed automata. A common strategy is to
 replace selected clock bounds with parameters and synthesize valuations
-for a specified property. Knapik and Penczek encode bounded executions
-of parametric timed automata as SMT formulas for reachability
-properties~\cite{knapik2016smt}.
+for a specified property~\cite{andre2019decidable}. Knapik and Penczek
+encode bounded executions of parametric timed automata as SMT formulas
+for reachability properties~\cite{knapik2016smt}.
 TARTAR~\cite{kolbl2019clock} encodes the timing constraints of a TDT in
 linear real arithmetic and uses MaxSMT to generate candidate repairs
 with minimal changes to clock bounds, followed by an admissibility check
