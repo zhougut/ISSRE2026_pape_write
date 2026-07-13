@@ -11,11 +11,10 @@ admissibility check based on functional equivalence~\cite{kolbl2019clock};
 any newly revealed TDT is added to the pool for the next repair
 iteration.
 
-The experimental results show that MPTA-Repair improves the repair
-success rate over the TARTAR baseline from 72\% to 93\% on the benchmark
-dataset and from 20\% to 76\% on the industrial dataset. The remaining
-failures mainly occur on complex models, where interactions among timing
-constraints enlarge the clock-bound repair space and prevent an
+The experimental results show that MPTA-Repair achieves higher repair
+success than the TARTAR baseline, especially on industrial models with
+coupled timing constraints. The remaining failures mainly occur when
+such interactions enlarge the clock-bound repair space and prevent an
 admissible candidate from being found within the time budget.
 
 Future work will improve repair efficiency by checking candidate
