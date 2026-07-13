@@ -27,6 +27,15 @@ constraints across multiple properties.
 
 \input{tables/dataset-statistics}
 
+Table~\ref{tab:dataset-statistics} characterizes the original models
+and retained mutants used in the evaluation. The benchmark dataset
+contains nine original models and 54 retained mutants, while the
+industrial dataset contains five original models and 105 retained
+mutants. Although it has fewer original models, the industrial dataset
+is larger per model: 57.80 locations, 91.80 transitions, and 7.3
+properties on average, compared with 30.56 locations, 52.67
+transitions, and 4.1 properties for the benchmark dataset.
+
 Since real-world NTA models with labeled clock-bound faults are
 difficult to obtain, we synthesize faulty instances using mutation
 \cite{jia2011mutation}. Some collected models contain few or no
@@ -45,35 +54,21 @@ exposes a new TDT, it starts another repair round rather than solving
 all TDTs jointly.
 The evaluation is organized around the following research questions:
 
-\noindent\textbf{RQ1.} What are the main characteristics of the
-benchmark and industrial repair instances?
-
-\noindent\textbf{RQ2.} How does MPTA-Repair compare with the iterative
+\noindent\textbf{RQ1.} How does MPTA-Repair compare with the iterative
 TARTAR baseline in terms of accepted-repair rate?
 
-\noindent\textbf{RQ3.} How does iterative space optimization affect
+\noindent\textbf{RQ2.} How does iterative space optimization affect
 repair efficiency and effectiveness?
 
-\noindent\textbf{RQ4.} What practical lessons emerge from applying
+\noindent\textbf{RQ3.} What practical lessons emerge from applying
 MPTA-Repair to industrial cases, and what explains its advantages over
 the iterative TARTAR baseline and its remaining failures?
 
 \subsection{Results by Research Question}
 
-\noindent\textbf{RQ1: Dataset and mutation characteristics.}
-Table~\ref{tab:dataset-statistics} shows that the benchmark dataset
-contains nine original models and 54 retained mutants, while the
-industrial dataset contains five original models and 105 retained
-mutants. Although it has fewer original models, the industrial dataset
-is larger per model: 57.80 locations, 91.80 transitions, and 7.3
-properties on average, compared with 30.56 locations, 52.67
-transitions, and 4.1 properties for the benchmark dataset. The repair
-instances therefore cover both smaller benchmark models and larger
-industrial models with broader property sets.
-
 \input{tables/overall-results}
 
-\noindent\textbf{RQ2: Accepted-repair rate.}
+\noindent\textbf{RQ1: Accepted-repair rate.}
 Table~\ref{tab:overall-results} shows that MPTA-Repair achieves higher
 accepted-repair rates than the iterative baseline on both datasets. On
 the benchmark dataset, it improves the success rate from 72\% to 93\%
@@ -89,7 +84,7 @@ when industrial timing constraints are tightly coupled.
 
 \input{tables/search-optimization-results}
 
-\noindent\textbf{RQ3: Effect of iterative space optimization.}
+\noindent\textbf{RQ2: Effect of iterative space optimization.}
 Table~\ref{tab:search-optimization-results} compares MPTA-Repair with
 and without search optimization. On the benchmark dataset, the average
 iteration count is already low (1.27 without optimization and 1.26 with
@@ -100,7 +95,7 @@ refinement rounds, optimization reduces the average iteration count from
 optimization does not change the repair space or accepted-repair
 condition, it affects efficiency rather than repair effectiveness.
 
-\noindent\textbf{RQ4: Practical lessons and failure analysis.}
+\noindent\textbf{RQ3: Practical lessons and failure analysis.}
 The industrial cases show that accepted repairs require both global
 property checking and functional admissibility. A candidate that blocks
 one TDT may still violate another property, while a bound edit may

@@ -38,7 +38,7 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
-\title{MPTA-Repair: Simultaneous Multi-Property Clock Bound Repair for Networks of Timed Automata via Iterative Space Optimization}
+\title{MPTA-Repair: Multi-Property Clock Bound Repair for Networks of Timed Automata via Iterative Space Optimization}
 \author{%
 \IEEEauthorblockN{Guangtong Zhou, Run Chang, Ji Wu\textsuperscript{*}}
 \IEEEauthorblockA{School of Computer Science and Engineering, Beihang University, Beijing, China\\
@@ -52,7 +52,7 @@ The implementation and datasets are publicly available at
 \url{https://github.com/zhougut/MPTA-Repair}.}}
 \endgroup
 \begin{abstract}
-Networks of timed automata (NTA) are widely used to model and verify real-time industrial systems, which are typically required to satisfy multiple properties simultaneously. When verification fails, repairing an NTA is challenging because a valid repair must modify erroneous clock constraints, satisfy all properties, and preserve the original functional behavior. We present MPTA-Repair, an automated repair framework for multi-property NTA. It uses an iterative, counterexample-guided MaxSMT approach to generate minimally modified candidates, exploiting relations among properties, counterexamples, and repair variables to optimize search. Each candidate is validated by full-property regression verification and an admissibility check based on functional equivalence. Compared to the TARTAR baseline, MPTA-Repair achieves higher effectiveness on faulty models generated via our mutation strategy. Specifically, it improves the success rate from 72\% to 93\% on benchmarks, and from 20\% to 76\% on an industrial dataset constructed in this work.
+Networks of timed automata (NTA) are widely used to model and verify real-time industrial systems, which are typically required to satisfy multiple properties simultaneously. When verification fails, repairing an NTA is challenging because a valid repair must modify erroneous clock constraints, satisfy all properties, and preserve the original functional behavior. We present MPTA-Repair, an automated repair framework for multi-property NTA. It uses an iterative, counterexample-guided MaxSMT approach to generate minimally modified candidates, exploiting relations among properties, counterexamples, and repair variables to optimize search. Each candidate is validated by full-property regression verification and an admissibility check based on functional equivalence. Compared to the TARTAR baseline, MPTA-Repair achieves higher effectiveness on 54 benchmark mutants and 105 industrial mutants. Specifically, it improves the success rate from 72\% to 93\% on benchmarks, and from 20\% to 76\% on an industrial dataset constructed in this work.
 \end{abstract}
 \begin{IEEEkeywords}
 networks of timed automata, automated model repair, MaxSMT, multi-property verification
